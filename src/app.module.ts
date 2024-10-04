@@ -4,6 +4,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { YoutubeVideo } from './youtube-videos/youtube-video.entity';
 
 @Module({
   imports: [
@@ -29,8 +30,8 @@ import { AppService } from './app.service';
         username: configService.get('POSTGRES_USER'),
         password: configService.get('POSTGRES_PASSWORD'),
         database: configService.get('POSTGRES_DB'),
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: configService.get('NODE_ENV') !== 'production',
+        entities: [YoutubeVideo],
+        synchronize: false,
       }),
       inject: [ConfigService],
     }),
