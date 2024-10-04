@@ -1,0 +1,4 @@
+This is a Nest.js project that is an API for an app that generates custom cheatsheets from a Youtube video.
+It uses TypeORM to connect to a Postgres database, and Redis for Bull event queue.
+And exposes a REST API for the frontend to use.
+Follow the common best practices for a Typescript and Nest.js project.
