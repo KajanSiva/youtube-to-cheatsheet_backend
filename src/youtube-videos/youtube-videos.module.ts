@@ -4,6 +4,7 @@ import { BullModule } from '@nestjs/bull';
 import { YoutubeVideosController } from './youtube-videos.controller';
 import { YoutubeVideosService } from './youtube-videos.service';
 import { YoutubeVideo } from './youtube-video.entity';
+import { VideoProcessingConsumer } from './video-processing.consumer';
 
 @Module({
   imports: [
@@ -13,6 +14,6 @@ import { YoutubeVideo } from './youtube-video.entity';
     }),
   ],
   controllers: [YoutubeVideosController],
-  providers: [YoutubeVideosService],
+  providers: [YoutubeVideosService, VideoProcessingConsumer],
 })
 export class YoutubeVideosModule {}
