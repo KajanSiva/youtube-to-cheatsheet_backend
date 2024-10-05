@@ -22,6 +22,7 @@ import { YoutubeVideosModule } from './youtube-videos/youtube-videos.module';
         POSTGRES_DB: Joi.string().required(),
         REDIS_HOST: Joi.string().required(),
         REDIS_PORT: Joi.number().default(6379),
+        STORAGE_TYPE: Joi.string().valid('local', 's3').default('local'),
       }),
       isGlobal: true,
     }),

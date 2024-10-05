@@ -5,6 +5,7 @@ import { YoutubeVideosController } from './youtube-videos.controller';
 import { YoutubeVideosService } from './youtube-videos.service';
 import { YoutubeVideo } from './youtube-video.entity';
 import { VideoProcessingConsumer } from './video-processing.consumer';
+import { StorageServiceProvider } from '../common/storage/storage.provider';
 
 @Module({
   imports: [
@@ -14,6 +15,10 @@ import { VideoProcessingConsumer } from './video-processing.consumer';
     }),
   ],
   controllers: [YoutubeVideosController],
-  providers: [YoutubeVideosService, VideoProcessingConsumer],
+  providers: [
+    YoutubeVideosService,
+    VideoProcessingConsumer,
+    StorageServiceProvider,
+  ],
 })
 export class YoutubeVideosModule {}

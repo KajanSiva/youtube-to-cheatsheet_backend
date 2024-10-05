@@ -49,4 +49,7 @@ export class YoutubeVideo {
     onUpdate: 'CURRENT_TIMESTAMP',
   })
   updatedAt: Date;
+
+  @Column({ length: 255, nullable: true })
+  title: string | null;
 }
