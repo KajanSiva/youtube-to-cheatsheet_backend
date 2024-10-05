@@ -32,8 +32,8 @@ export class YoutubeVideo {
   @Column({ name: 'discussion_topics', type: 'jsonb', nullable: true })
   discussionTopics: object;
 
-  @Column({ length: 10 })
-  language: string;
+  @Column({ length: 10, nullable: true })
+  language: string | null;
 
   @Column({
     name: 'created_at',
