@@ -1,6 +1,7 @@
 import { DataSource } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { config } from 'dotenv';
+import { YoutubeVideo } from '../youtube-videos/youtube-video.entity';
 
 config();
 
@@ -13,7 +14,7 @@ export default new DataSource({
   username: configService.get('POSTGRES_USER'),
   password: configService.get('POSTGRES_PASSWORD'),
   database: configService.get('POSTGRES_DB'),
-  entities: ['dist/**/*.entity{.ts,.js}'],
+  entities: [YoutubeVideo],
   migrations: ['dist/migrations/*{.ts,.js}'],
   migrationsTableName: 'migrations',
 });

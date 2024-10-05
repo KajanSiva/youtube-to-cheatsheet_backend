@@ -5,6 +5,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { YoutubeVideo } from './youtube-videos/youtube-video.entity';
+import { BullModule } from '@nestjs/bull';
+import { YoutubeVideosModule } from './youtube-videos/youtube-videos.module';
 
 @Module({
   imports: [
@@ -18,6 +20,8 @@ import { YoutubeVideo } from './youtube-videos/youtube-video.entity';
         POSTGRES_USER: Joi.string().required(),
         POSTGRES_PASSWORD: Joi.string().required(),
         POSTGRES_DB: Joi.string().required(),
+        REDIS_HOST: Joi.string().required(),
+        REDIS_PORT: Joi.number().default(6379),
       }),
       isGlobal: true,
     }),
@@ -35,6 +39,17 @@ import { YoutubeVideo } from './youtube-videos/youtube-video.entity';
       }),
       inject: [ConfigService],
     }),
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        redis: {
+          host: configService.get('REDIS_HOST'),
+          port: configService.get('REDIS_PORT'),
+        },
+      }),
+      inject: [ConfigService],
+    }),
+    YoutubeVideosModule,
   ],
   controllers: [AppController],
   providers: [AppService],
