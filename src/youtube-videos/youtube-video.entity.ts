@@ -2,8 +2,9 @@ import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 export enum VideoProcessingStatus {
   PENDING = 'pending',
-  IN_PROGRESS = 'in_progress',
-  DONE = 'done',
+  AUDIO_FETCHED = 'audio_fetched',
+  TRANSCRIPT_GENERATED = 'transcript_generated',
+  TOPICS_FETCHED = 'topics_fetched',
 }
 
 @Entity('youtube_videos')
