@@ -82,7 +82,8 @@ export class CheatsheetProcessingConsumer {
     this.logger.debug('Starting transcript processing...');
 
     const transcriptContent = await this.storageService.readFile(transcriptUrl);
-    const transcript = transcriptContent.toString('utf-8');
+    const transcriptJson = JSON.parse(transcriptContent.toString('utf-8'));
+    const transcript = transcriptJson.text;
 
     const textSplitter = new RecursiveCharacterTextSplitter({
       chunkSize: 10000,

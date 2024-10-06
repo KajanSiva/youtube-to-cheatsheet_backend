@@ -80,9 +80,9 @@ export class YoutubeVideosService {
 
     return videos.map((video) => ({
       id: video.video_id,
-      youtubeId: video.video_youtubeId,
+      youtubeId: video.video_youtube_id,
       title: video.video_title,
-      processingStatus: video.video_processingStatus,
+      processingStatus: video.video_processing_status,
       cheatsheetCount: parseInt(video.cheatsheetCount, 10),
     }));
   }

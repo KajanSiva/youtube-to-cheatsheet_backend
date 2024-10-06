@@ -25,7 +25,7 @@ const unlink = promisify(fs.unlink);
 export class VideoProcessingConsumer {
   private readonly logger = new Logger(VideoProcessingConsumer.name);
   private readonly openai: OpenAI;
-  private readonly MAX_CHUNK_SIZE = 23 * 1024 * 1024; // 23MB in bytes
+  private readonly MAX_CHUNK_SIZE = 18 * 1024 * 1024; // Reduced to 18MB for safety
 
   constructor(
     @InjectRepository(YoutubeVideo)
@@ -41,9 +41,9 @@ export class VideoProcessingConsumer {
     this.logger.debug(job.data);
 
     const video = await this.getVideo(job.data.videoId);
-    // await this.fetchVideoTitle(video);
-    // await this.fetchAudio(video);
-    // await this.generateTranscript(video);
+    await this.fetchVideoTitle(video);
+    await this.fetchAudio(video);
+    await this.generateTranscript(video);
     await this.fetchTopics(video);
 
     this.logger.debug('Finished processing video');
@@ -170,7 +170,7 @@ export class VideoProcessingConsumer {
 
         const duration = metadata.format.duration;
         const bitrate = metadata.format.bit_rate;
-        const targetChunkDuration = (maxChunkSize * 8) / bitrate;
+        const targetChunkDuration = ((maxChunkSize * 8) / bitrate) * 0.8; // Reduce target duration by 20%
 
         this.logger.debug(
           `Audio duration: ${duration}, bitrate: ${bitrate}, target chunk duration: ${targetChunkDuration}`,
@@ -328,7 +328,8 @@ export class VideoProcessingConsumer {
       const transcriptContent = await this.storageService.readFile(
         video.transcriptUrl,
       );
-      const transcript = transcriptContent.toString('utf-8');
+      const transcriptJson = JSON.parse(transcriptContent.toString('utf-8'));
+      const transcript = transcriptJson.text;
 
       const docs = await this.processTranscript(transcript);
       const { structuredThemes } = await this.identifyThemes(docs);
