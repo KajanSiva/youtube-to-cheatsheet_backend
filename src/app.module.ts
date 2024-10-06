@@ -7,6 +7,7 @@ import { AppService } from './app.service';
 import { YoutubeVideo } from './youtube-videos/youtube-video.entity';
 import { BullModule } from '@nestjs/bull';
 import { YoutubeVideosModule } from './youtube-videos/youtube-videos.module';
+import { Cheatsheet } from './cheatsheets/cheatsheet.entity';
 
 @Module({
   imports: [
@@ -35,7 +36,7 @@ import { YoutubeVideosModule } from './youtube-videos/youtube-videos.module';
         username: configService.get('POSTGRES_USER'),
         password: configService.get('POSTGRES_PASSWORD'),
         database: configService.get('POSTGRES_DB'),
-        entities: [YoutubeVideo],
+        entities: [YoutubeVideo, Cheatsheet],
         synchronize: false,
       }),
       inject: [ConfigService],

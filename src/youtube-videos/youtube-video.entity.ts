@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { Cheatsheet } from '../cheatsheets/cheatsheet.entity';
 
 export enum VideoProcessingStatus {
   PENDING = 'pending',
@@ -52,4 +53,7 @@ export class YoutubeVideo {
 
   @Column({ length: 255, nullable: true })
   title: string | null;
+
+  @OneToMany(() => Cheatsheet, (cheatsheet) => cheatsheet.video)
+  cheatsheets: Cheatsheet[];
 }
