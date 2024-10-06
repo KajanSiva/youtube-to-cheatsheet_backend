@@ -45,4 +45,17 @@ export class CheatsheetsService {
 
     return savedCheatsheet;
   }
+
+  async getCheatsheetById(id: string): Promise<Cheatsheet> {
+    const cheatsheet = await this.cheatsheetRepository.findOne({
+      where: { id },
+      relations: ['video'],
+    });
+
+    if (!cheatsheet) {
+      throw new NotFoundException(`Cheatsheet with id ${id} not found`);
+    }
+
+    return cheatsheet;
+  }
 }

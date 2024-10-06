@@ -4,6 +4,9 @@ import {
   Body,
   HttpStatus,
   HttpException,
+  Get,
+  Param,
+  NotFoundException,
 } from '@nestjs/common';
 import { CreateCheatsheetDto } from './dto/create-cheatsheet.dto';
 import { CheatsheetsService } from './cheatsheets.service';
@@ -20,6 +23,31 @@ export class CheatsheetsController {
       return { message: 'Cheatsheet created successfully', id: result.id };
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @Get(':id')
+  async getCheatsheet(@Param('id') id: string) {
+    try {
+      const cheatsheet = await this.cheatsheetsService.getCheatsheetById(id);
+      return {
+        id: cheatsheet.id,
+        videoId: cheatsheet.video.id,
+        processingStatus: cheatsheet.processingStatus,
+        neededTopics: cheatsheet.neededTopics,
+        content: cheatsheet.content,
+        language: cheatsheet.language,
+        createdAt: cheatsheet.createdAt,
+        updatedAt: cheatsheet.updatedAt,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new HttpException(error.message, HttpStatus.NOT_FOUND);
+      }
+      throw new HttpException(
+        'Internal server error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }
