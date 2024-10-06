@@ -58,4 +58,16 @@ export class CheatsheetsService {
 
     return cheatsheet;
   }
+
+  async getCheatsheets(videoId?: string): Promise<Cheatsheet[]> {
+    const queryBuilder = this.cheatsheetRepository
+      .createQueryBuilder('cheatsheet')
+      .leftJoinAndSelect('cheatsheet.video', 'video');
+
+    if (videoId) {
+      queryBuilder.where('video.id = :videoId', { videoId });
+    }
+
+    return queryBuilder.getMany();
+  }
 }

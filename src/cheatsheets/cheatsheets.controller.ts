@@ -7,6 +7,7 @@ import {
   Get,
   Param,
   NotFoundException,
+  Query,
 } from '@nestjs/common';
 import { CreateCheatsheetDto } from './dto/create-cheatsheet.dto';
 import { CheatsheetsService } from './cheatsheets.service';
@@ -44,6 +45,27 @@ export class CheatsheetsController {
       if (error instanceof NotFoundException) {
         throw new HttpException(error.message, HttpStatus.NOT_FOUND);
       }
+      throw new HttpException(
+        'Internal server error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Get()
+  async getCheatsheets(@Query('videoId') videoId?: string) {
+    try {
+      const cheatsheets = await this.cheatsheetsService.getCheatsheets(videoId);
+      return cheatsheets.map((cheatsheet) => ({
+        id: cheatsheet.id,
+        videoId: cheatsheet.video.id,
+        processingStatus: cheatsheet.processingStatus,
+        neededTopics: cheatsheet.neededTopics,
+        language: cheatsheet.language,
+        createdAt: cheatsheet.createdAt,
+        updatedAt: cheatsheet.updatedAt,
+      }));
+    } catch (error) {
       throw new HttpException(
         'Internal server error',
         HttpStatus.INTERNAL_SERVER_ERROR,
