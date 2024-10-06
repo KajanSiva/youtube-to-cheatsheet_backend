@@ -11,6 +11,12 @@ import * as fs from 'fs';
 import { promisify } from 'util';
 import { OpenAI } from 'openai';
 import * as ffmpeg from 'fluent-ffmpeg';
+import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
+import { Document } from 'langchain/document';
+import { PromptTemplate } from '@langchain/core/prompts';
+import { loadSummarizationChain } from 'langchain/chains';
+import { ChatOpenAI } from '@langchain/openai';
+import { z } from 'zod';
 
 const unlink = promisify(fs.unlink);
 
@@ -35,10 +41,10 @@ export class VideoProcessingConsumer {
     this.logger.debug(job.data);
 
     const video = await this.getVideo(job.data.videoId);
-    await this.fetchVideoTitle(video);
-    await this.fetchAudio(video);
-    await this.generateTranscript(video);
-    // await this.fetchTopics(video);
+    // await this.fetchVideoTitle(video);
+    // await this.fetchAudio(video);
+    // await this.generateTranscript(video);
+    await this.fetchTopics(video);
 
     this.logger.debug('Finished processing video');
   }
@@ -318,9 +324,122 @@ export class VideoProcessingConsumer {
   }
 
   private async fetchTopics(video: YoutubeVideo): Promise<void> {
-    // TODO: Implement topic fetching logic
-    video.discussionTopics = { topics: ['Dummy topic 1', 'Dummy topic 2'] };
-    video.processingStatus = VideoProcessingStatus.TOPICS_FETCHED;
-    await this.youtubeVideoRepository.save(video);
+    try {
+      const transcriptContent = await this.storageService.readFile(
+        video.transcriptUrl,
+      );
+      const transcript = transcriptContent.toString('utf-8');
+
+      const docs = await this.processTranscript(transcript);
+      const { structuredThemes } = await this.identifyThemes(docs);
+
+      video.discussionTopics = structuredThemes;
+      video.processingStatus = VideoProcessingStatus.TOPICS_FETCHED;
+      await this.youtubeVideoRepository.save(video);
+
+      this.logger.debug('Topics fetched and saved successfully');
+    } catch (error) {
+      this.logger.error(`Error fetching topics: ${error.message}`);
+      throw error;
+    }
+  }
+
+  private async processTranscript(transcript: string): Promise<Document[]> {
+    this.logger.debug('Starting transcript processing...');
+
+    const textSplitter = new RecursiveCharacterTextSplitter({
+      chunkSize: 10000,
+      chunkOverlap: 200,
+    });
+
+    const docs = await textSplitter.splitDocuments([
+      new Document({ pageContent: transcript }),
+    ]);
+
+    this.logger.debug(`Transcript split into ${docs.length} chunks.`);
+    return docs;
+  }
+
+  private async identifyThemes(
+    docs: Document[],
+  ): Promise<{ structuredThemes: any }> {
+    this.logger.debug('Starting theme identification...');
+
+    const model = new ChatOpenAI({
+      temperature: 0,
+      modelName: 'gpt-3.5-turbo',
+    });
+    const themeChain = loadSummarizationChain(model, {
+      type: 'map_reduce',
+      mapPrompt: PromptTemplate.fromTemplate(`
+Analyze the following part of a video transcript and identify the themes or topics discussed. For each theme, provide:
+
+- **Theme Title**: A short title summarizing the theme.
+- **Description**: A brief summary explaining what is said about this theme.
+- **Sub-themes** (if applicable): List of sub-topics related to the main theme.
+
+Transcript part:
+{text}
+
+Identify the themes in this part:
+      `),
+      combinePrompt: PromptTemplate.fromTemplate(`
+Combine and consolidate the following theme identifications from different parts of the transcript. Eliminate redundancies and organize the themes logically.
+
+{text}
+
+Provide a final list of main themes for the entire transcript:
+      `),
+    } as any); // TODO: fix type error
+
+    this.logger.debug('Identifying themes...');
+    const result = await themeChain.invoke({ input_documents: docs });
+
+    this.logger.debug('Generating structured theme output...');
+    const structuredThemes = await this.generateStructuredThemes(
+      model,
+      result.text,
+    );
+
+    return { structuredThemes };
+  }
+
+  private async generateStructuredThemes(model, text) {
+    const themeSchema = z.object({
+      themes: z.array(
+        z.object({
+          title: z.string().describe('A short title summarizing the theme.'),
+          description: z
+            .string()
+            .describe(
+              'A brief summary explaining what is said about this theme.',
+            ),
+          subThemes: z
+            .array(z.string())
+            .describe(
+              'List of sub-topics related to the main theme. Can be an empty array if there are no sub-themes.',
+            ),
+        }),
+      ),
+    });
+
+    const structuredLLM = model.withStructuredOutput(themeSchema, {
+      strict: true,
+    });
+    const structuredThemePrompt = PromptTemplate.fromTemplate(`
+  Generate a JSON output based on the following identified themes:
+  
+  {text}
+  
+  Create a structured output with an array of themes, each containing:
+  1. title: A short title summarizing the theme.
+  2. description: A brief summary explaining what is said about this theme.
+  3. subThemes: An array of sub-topics related to the main theme. If there are no sub-themes, provide an empty array.
+  
+  Ensure that every theme has all three fields, even if subThemes is an empty array.
+    `);
+    return await structuredLLM.invoke(
+      await structuredThemePrompt.formatPromptValue({ text }),
+    );
   }
 }
