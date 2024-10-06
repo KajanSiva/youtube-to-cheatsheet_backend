@@ -367,7 +367,7 @@ export class VideoProcessingConsumer {
 
     const model = new ChatOpenAI({
       temperature: 0,
-      modelName: 'gpt-3.5-turbo',
+      modelName: 'gpt-4o-mini-2024-07-18',
     });
     const themeChain = loadSummarizationChain(model, {
       type: 'map_reduce',

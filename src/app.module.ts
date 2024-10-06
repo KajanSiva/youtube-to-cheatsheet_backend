@@ -8,6 +8,7 @@ import { YoutubeVideo } from './youtube-videos/youtube-video.entity';
 import { BullModule } from '@nestjs/bull';
 import { YoutubeVideosModule } from './youtube-videos/youtube-videos.module';
 import { Cheatsheet } from './cheatsheets/cheatsheet.entity';
+import { CheatsheetsModule } from './cheatsheets/cheatsheets.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { Cheatsheet } from './cheatsheets/cheatsheet.entity';
       inject: [ConfigService],
     }),
     YoutubeVideosModule,
+    CheatsheetsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

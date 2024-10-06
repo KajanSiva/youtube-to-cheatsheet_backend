@@ -5,6 +5,8 @@ import { CheatsheetsController } from './cheatsheets.controller';
 import { CheatsheetsService } from './cheatsheets.service';
 import { Cheatsheet } from './cheatsheet.entity';
 import { YoutubeVideo } from '../youtube-videos/youtube-video.entity';
+import { CheatsheetProcessingConsumer } from './cheatsheet-processing.consumer';
+import { StorageServiceProvider } from 'src/common/storage/storage.provider';
 
 @Module({
   imports: [
@@ -14,6 +16,10 @@ import { YoutubeVideo } from '../youtube-videos/youtube-video.entity';
     }),
   ],
   controllers: [CheatsheetsController],
-  providers: [CheatsheetsService],
+  providers: [
+    CheatsheetsService,
+    CheatsheetProcessingConsumer,
+    StorageServiceProvider,
+  ],
 })
 export class CheatsheetsModule {}
