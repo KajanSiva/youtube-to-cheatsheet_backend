@@ -39,4 +39,17 @@ export class YoutubeVideosController {
       );
     }
   }
+
+  @Get()
+  async getVideos() {
+    try {
+      const videos = await this.youtubeVideosService.getVideos();
+      return { videos };
+    } catch (error) {
+      throw new HttpException(
+        'Internal server error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 }

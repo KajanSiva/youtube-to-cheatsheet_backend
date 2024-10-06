@@ -55,4 +55,35 @@ export class YoutubeVideosService {
     const match = url.match(regExp);
     return match && match[2].length === 11 ? match[2] : null;
   }
+
+  async getVideos(): Promise<
+    {
+      id: string;
+      youtubeId: string;
+      title: string | null;
+      processingStatus: VideoProcessingStatus;
+      cheatsheetCount: number;
+    }[]
+  > {
+    const videos = await this.youtubeVideoRepository
+      .createQueryBuilder('video')
+      .leftJoin('video.cheatsheets', 'cheatsheet')
+      .select([
+        'video.id',
+        'video.youtubeId',
+        'video.title',
+        'video.processingStatus',
+      ])
+      .addSelect('COUNT(cheatsheet.id)', 'cheatsheetCount')
+      .groupBy('video.id')
+      .getRawMany();
+
+    return videos.map((video) => ({
+      id: video.video_id,
+      youtubeId: video.video_youtubeId,
+      title: video.video_title,
+      processingStatus: video.video_processingStatus,
+      cheatsheetCount: parseInt(video.cheatsheetCount, 10),
+    }));
+  }
 }
