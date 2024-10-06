@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { InjectQueue } from '@nestjs/bull';
@@ -31,6 +31,22 @@ export class YoutubeVideosService {
     });
 
     return savedVideo;
+  }
+
+  async getDiscussionTopics(id: string): Promise<object> {
+    const video = await this.youtubeVideoRepository.findOne({ where: { id } });
+
+    if (!video) {
+      throw new NotFoundException(`Video with id ${id} not found`);
+    }
+
+    if (!video.discussionTopics) {
+      throw new NotFoundException(
+        `Discussion topics for video with id ${id} are not available yet`,
+      );
+    }
+
+    return video.discussionTopics;
   }
 
   private extractYoutubeId(url: string): string | null {

@@ -4,6 +4,9 @@ import {
   Body,
   HttpStatus,
   HttpException,
+  Get,
+  Param,
+  NotFoundException,
 } from '@nestjs/common';
 import { YoutubeVideosService } from './youtube-videos.service';
 
@@ -18,6 +21,22 @@ export class YoutubeVideosController {
       return { message: 'YouTube video added successfully', id: result.id };
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @Get(':id/discussion-topics')
+  async getDiscussionTopics(@Param('id') id: string) {
+    try {
+      const topics = await this.youtubeVideosService.getDiscussionTopics(id);
+      return { discussionTopics: topics };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new HttpException(error.message, HttpStatus.NOT_FOUND);
+      }
+      throw new HttpException(
+        'Internal server error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }
