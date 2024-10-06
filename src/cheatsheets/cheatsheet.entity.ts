@@ -54,4 +54,7 @@ export class Cheatsheet {
 
   @Column({ nullable: true })
   error: string;
+
+  @Column({ length: 10, nullable: false })
+  language: string;
 }
