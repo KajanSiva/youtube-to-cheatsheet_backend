@@ -43,4 +43,17 @@ export class LocalStorageService implements StorageService, OnModuleInit {
       }
     }
   }
+
+  async fileExists(fileName: string): Promise<string | null> {
+    await this.ensureStorageDirectoryExists();
+    const directoryContents = await fs.promises.readdir(this.localStoragePath);
+    
+    const matchingFile = directoryContents.find(file => file.startsWith(fileName));
+    
+    if (matchingFile) {
+      return path.join(this.localStoragePath, matchingFile);
+    }
+    
+    return null;
+  }
 }

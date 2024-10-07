@@ -5,4 +5,5 @@ export abstract class StorageService {
   abstract saveFile(fileName: string, fileContent: Buffer): Promise<string>;
   abstract readFile(filePath: string): Promise<Buffer>;
   abstract deleteFile(filePath: string): Promise<void>;
+  abstract fileExists(fileName: string): Promise<string | null>;
 }

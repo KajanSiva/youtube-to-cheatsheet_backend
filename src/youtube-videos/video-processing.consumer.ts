@@ -88,32 +88,54 @@ export class VideoProcessingConsumer {
 
   private async fetchAudio(video: YoutubeVideo): Promise<void> {
     try {
+      const audioFileName = `${video.youtubeId}`;
+      const existingAudioFile = await this.storageService.fileExists(audioFileName);
+
+      if (existingAudioFile) {
+        this.logger.debug(`Audio file already exists for ${video.youtubeId}. Skipping download.`);
+        video.audioUrl = existingAudioFile;
+        video.processingStatus = VideoProcessingStatus.AUDIO_FETCHED;
+        await this.youtubeVideoRepository.save(video);
+        return;
+      }
+
       const youtubeUrl = `https://www.youtube.com/watch?v=${video.youtubeId}`;
-      const audioFileName = `${video.youtubeId}.mp3`;
       const tempOutputPath = path.join('/tmp', audioFileName);
 
       this.logger.debug(`Attempting to download audio from: ${youtubeUrl}`);
       this.logger.debug(`Temporary output path: ${tempOutputPath}`);
 
-      // Download and process audio
+      // Download and process audio with lower quality
       const youtubeDlOutput = await youtubeDl(youtubeUrl, {
         output: tempOutputPath,
         extractAudio: true,
         audioFormat: 'mp3',
-        verbose: true, // Add verbose output for debugging
+        audioQuality: 8,
+        postprocessorArgs: 'asr:16000', // Set sample rate to 16kHz
+        verbose: true,
       });
 
       this.logger.debug(`youtube-dl output: ${JSON.stringify(youtubeDlOutput, null, 2)}`);
 
-      // Check if the file exists before proceeding
-      if (!fs.existsSync(tempOutputPath)) {
-        throw new Error(`Audio file was not created at ${tempOutputPath}`);
+      // Find the actual downloaded file
+      const files = fs.readdirSync('/tmp');
+      const downloadedFile = files.find(file => file.startsWith(video.youtubeId));
+
+      if (!downloadedFile) {
+        throw new Error(`No audio file found for ${video.youtubeId}`);
       }
 
+      const actualFilePath = path.join('/tmp', downloadedFile);
+      this.logger.debug(`Found downloaded file: ${actualFilePath}`);
+
+      // Get the file extension
+      const fileExtension = path.extname(actualFilePath);
+      const finalFileName = `${audioFileName}${fileExtension}`;
+
       // Read the file and save it using StorageService
-      const audioBuffer = await this.storageService.readFile(tempOutputPath);
+      const audioBuffer = await this.storageService.readFile(actualFilePath);
       const audioFilePath = await this.storageService.saveFile(
-        audioFileName,
+        finalFileName,
         audioBuffer,
       );
 
@@ -123,7 +145,7 @@ export class VideoProcessingConsumer {
       await this.youtubeVideoRepository.save(video);
 
       // Clean up temporary file
-      await this.storageService.deleteFile(tempOutputPath);
+      await this.storageService.deleteFile(actualFilePath);
 
       this.logger.debug(`Audio fetched and saved: ${audioFilePath}`);
     } catch (error) {
@@ -167,7 +189,7 @@ export class VideoProcessingConsumer {
   private splitAudio(
     filePath: string,
     maxChunkSize = this.MAX_CHUNK_SIZE,
-    minSilenceLen = 0.5,
+    minSilenceLen = 0.75,
     silenceThresh = -40,
   ): Promise<number[][]> {
     return new Promise((resolve, reject) => {
@@ -184,7 +206,7 @@ export class VideoProcessingConsumer {
 
         const duration = metadata.format.duration;
         const bitrate = metadata.format.bit_rate;
-        const targetChunkDuration = ((maxChunkSize * 8) / bitrate) * 0.8; // Reduce target duration by 20%
+        const targetChunkDuration = ((maxChunkSize * 8) / bitrate) * 0.5;
 
         this.logger.debug(
           `Audio duration: ${duration}, bitrate: ${bitrate}, target chunk duration: ${targetChunkDuration}`,
@@ -201,23 +223,21 @@ export class VideoProcessingConsumer {
 
             if (silenceEnd) {
               const end = parseFloat(silenceEnd[1]);
-              if (end - lastSilenceEnd >= targetChunkDuration) {
+              if (end - currentChunk[0] >= targetChunkDuration) {
                 currentChunk.push(end);
                 chunks.push(currentChunk);
                 currentChunk = [end];
                 lastSilenceEnd = end;
-                this.logger.debug(`Chunk added: [${currentChunk[0]}, ${end}]`);
+                this.logger.debug(`silenceEnd Chunk added: [${currentChunk[0]}, ${end}]`);
               }
             } else if (silenceStart) {
               const start = parseFloat(silenceStart[1]);
-              if (start - lastSilenceEnd >= targetChunkDuration) {
+              if (start - currentChunk[0] >= targetChunkDuration) {
                 currentChunk.push(start);
                 chunks.push(currentChunk);
                 currentChunk = [start];
                 lastSilenceEnd = start;
-                this.logger.debug(
-                  `Chunk added: [${currentChunk[0]}, ${start}]`,
-                );
+                this.logger.debug(`silenceStart Chunk added: [${currentChunk[0]}, ${start}]`);
               }
             }
           })
@@ -243,6 +263,7 @@ export class VideoProcessingConsumer {
             }
 
             this.logger.debug(`Total chunks generated: ${chunks.length}`);
+            this.logger.debug(`Chunks: ${JSON.stringify(chunks)}`);
             resolve(chunks);
           })
           .on('error', (error) => {
@@ -284,6 +305,7 @@ export class VideoProcessingConsumer {
         `Processing chunk ${chunkNumber}: ${start.toFixed(2)} - ${end.toFixed(2)}`,
       );
 
+      const startChunking = Date.now();
       await new Promise((resolve, reject) => {
         ffmpeg(filePath)
           .setStartTime(start)
@@ -294,22 +316,29 @@ export class VideoProcessingConsumer {
           .on('error', reject)
           .run();
       });
+      const endChunking = Date.now();
+      const chunkingTime = (endChunking - startChunking) / 1000;
+      this.logger.debug(`Chunk ${chunkNumber} extracted. Time taken: ${chunkingTime.toFixed(2)} seconds`);
 
+      const startTranscribing = Date.now();
       const transcript = await this.openai.audio.transcriptions.create({
         file: fs.createReadStream(chunkPath),
         model: 'whisper-1',
         response_format: 'json',
       });
+      const endTranscribing = Date.now();
+      const transcribingTime = (endTranscribing - startTranscribing) / 1000;
+      this.logger.debug(`Chunk ${chunkNumber} transcribed. Time taken: ${transcribingTime.toFixed(2)} seconds`);
 
       await unlink(chunkPath);
-      this.logger.debug(`Chunk ${chunkNumber} transcribed successfully`);
+      this.logger.debug(`Chunk ${chunkNumber} processed successfully. Total time: ${(chunkingTime + transcribingTime).toFixed(2)} seconds`);
 
       return {
         text: transcript.text,
       };
     } catch (error) {
       this.logger.error(
-        `Error transcribing chunk ${chunkNumber}:`,
+        `Error processing chunk ${chunkNumber}:`,
         error.message,
       );
       throw error;
