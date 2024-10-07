@@ -92,12 +92,23 @@ export class VideoProcessingConsumer {
       const audioFileName = `${video.youtubeId}.mp3`;
       const tempOutputPath = path.join('/tmp', audioFileName);
 
+      this.logger.debug(`Attempting to download audio from: ${youtubeUrl}`);
+      this.logger.debug(`Temporary output path: ${tempOutputPath}`);
+
       // Download and process audio
-      await youtubeDl(youtubeUrl, {
+      const youtubeDlOutput = await youtubeDl(youtubeUrl, {
         output: tempOutputPath,
         extractAudio: true,
         audioFormat: 'mp3',
+        verbose: true, // Add verbose output for debugging
       });
+
+      this.logger.debug(`youtube-dl output: ${JSON.stringify(youtubeDlOutput, null, 2)}`);
+
+      // Check if the file exists before proceeding
+      if (!fs.existsSync(tempOutputPath)) {
+        throw new Error(`Audio file was not created at ${tempOutputPath}`);
+      }
 
       // Read the file and save it using StorageService
       const audioBuffer = await this.storageService.readFile(tempOutputPath);
@@ -117,6 +128,9 @@ export class VideoProcessingConsumer {
       this.logger.debug(`Audio fetched and saved: ${audioFilePath}`);
     } catch (error) {
       this.logger.error(`Error fetching audio: ${error.message}`);
+      if (error.stderr) {
+        this.logger.error(`youtube-dl stderr: ${error.stderr}`);
+      }
       throw error;
     }
   }
@@ -244,27 +258,15 @@ export class VideoProcessingConsumer {
   private async transcribeChunks(
     filePath: string,
     chunks: number[][],
-  ): Promise<{ text: string; segments: any[] }> {
+  ): Promise<{ text: string; }> {
     const transcripts = {
       text: '',
-      segments: [],
     };
 
     for (let i = 0; i < chunks.length; i++) {
       const [start, end] = chunks[i];
       const transcript = await this.transcribeChunk(filePath, start, end, i);
       transcripts.text += transcript.text;
-      const segmentOffset = transcripts.segments.length;
-      const timeOffset = start;
-      transcripts.segments.push(
-        ...transcript.segments.map((segment) => ({
-          ...segment,
-          id: segment.id + segmentOffset,
-          seek: segment.seek + segmentOffset,
-          start: segment.start + timeOffset,
-          end: segment.end + timeOffset,
-        })),
-      );
     }
 
     return transcripts;
@@ -275,7 +277,7 @@ export class VideoProcessingConsumer {
     start: number,
     end: number,
     chunkNumber: number,
-  ): Promise<{ text: string; segments: any[] }> {
+  ): Promise<{ text: string; }> {
     try {
       const chunkPath = `/tmp/temp_chunk_${chunkNumber}.mp3`;
       this.logger.debug(
@@ -296,8 +298,7 @@ export class VideoProcessingConsumer {
       const transcript = await this.openai.audio.transcriptions.create({
         file: fs.createReadStream(chunkPath),
         model: 'whisper-1',
-        response_format: 'verbose_json',
-        timestamp_granularities: ['segment'],
+        response_format: 'json',
       });
 
       await unlink(chunkPath);
@@ -305,14 +306,6 @@ export class VideoProcessingConsumer {
 
       return {
         text: transcript.text,
-        segments: transcript.segments.map((segment) => ({
-          id: segment.id,
-          seek: segment.seek,
-          start: segment.start,
-          end: segment.end,
-          text: segment.text,
-          tokens: segment.tokens,
-        })),
       };
     } catch (error) {
       this.logger.error(
