@@ -5,7 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { YoutubeVideo, VideoProcessingStatus } from './youtube-video.entity';
 import { StorageService } from '../common/storage/storage.interface';
-import { youtubeDl } from 'youtube-dl-exec';
+import { Payload, youtubeDl } from 'youtube-dl-exec';
 import * as path from 'path';
 import * as fs from 'fs';
 import { promisify } from 'util';
@@ -41,7 +41,7 @@ export class VideoProcessingConsumer {
     this.logger.debug(job.data);
 
     const video = await this.getVideo(job.data.videoId);
-    await this.fetchVideoTitle(video);
+    await this.fetchVideoInformations(video);
     await this.fetchAudio(video);
     await this.generateTranscript(video);
     await this.fetchTopics(video);
@@ -59,29 +59,31 @@ export class VideoProcessingConsumer {
     return video;
   }
 
-  private async fetchVideoTitle(video: YoutubeVideo): Promise<void> {
+  private async fetchVideoInformations(video: YoutubeVideo): Promise<void> {
     try {
       const youtubeUrl = `https://www.youtube.com/watch?v=${video.youtubeId}`;
 
       // Get video info
-      const output = await youtubeDl(youtubeUrl, {
+      const output = (await youtubeDl(youtubeUrl, {
         dumpSingleJson: true,
         noCheckCertificates: true,
         noWarnings: true,
         preferFreeFormats: true,
         addHeader: ['referer:youtube.com', 'user-agent:googlebot'],
-      });
+      })) as Payload; // TODO: check why output is not typed properly
 
-      // TODO: check why output is not typed properly
-      const title = (output as { title: string }).title;
+      const title = output.title;
+      const thumbnail = output.thumbnail;
 
       // Update video entity with the title
       video.title = title;
+      video.thumbnailUrl = thumbnail;
       await this.youtubeVideoRepository.save(video);
 
       this.logger.debug(`Video title fetched: ${title}`);
+      this.logger.debug(`Video thumbnailUrl fetched: ${thumbnail}`);
     } catch (error) {
-      this.logger.error(`Error fetching video title: ${error.message}`);
+      this.logger.error(`Error fetching video informations: ${error.message}`);
       throw error;
     }
   }
@@ -89,10 +91,13 @@ export class VideoProcessingConsumer {
   private async fetchAudio(video: YoutubeVideo): Promise<void> {
     try {
       const audioFileName = `${video.youtubeId}`;
-      const existingAudioFile = await this.storageService.fileExists(audioFileName);
+      const existingAudioFile =
+        await this.storageService.fileExists(audioFileName);
 
       if (existingAudioFile) {
-        this.logger.debug(`Audio file already exists for ${video.youtubeId}. Skipping download.`);
+        this.logger.debug(
+          `Audio file already exists for ${video.youtubeId}. Skipping download.`,
+        );
         video.audioUrl = existingAudioFile;
         video.processingStatus = VideoProcessingStatus.AUDIO_FETCHED;
         await this.youtubeVideoRepository.save(video);
@@ -115,11 +120,15 @@ export class VideoProcessingConsumer {
         verbose: true,
       });
 
-      this.logger.debug(`youtube-dl output: ${JSON.stringify(youtubeDlOutput, null, 2)}`);
+      this.logger.debug(
+        `youtube-dl output: ${JSON.stringify(youtubeDlOutput, null, 2)}`,
+      );
 
       // Find the actual downloaded file
       const files = fs.readdirSync('/tmp');
-      const downloadedFile = files.find(file => file.startsWith(video.youtubeId));
+      const downloadedFile = files.find((file) =>
+        file.startsWith(video.youtubeId),
+      );
 
       if (!downloadedFile) {
         throw new Error(`No audio file found for ${video.youtubeId}`);
@@ -195,7 +204,6 @@ export class VideoProcessingConsumer {
     return new Promise((resolve, reject) => {
       const chunks: number[][] = [];
       let currentChunk = [0];
-      let lastSilenceEnd = 0;
 
       ffmpeg.ffprobe(filePath, (err, metadata) => {
         if (err) {
@@ -227,8 +235,9 @@ export class VideoProcessingConsumer {
                 currentChunk.push(end);
                 chunks.push(currentChunk);
                 currentChunk = [end];
-                lastSilenceEnd = end;
-                this.logger.debug(`silenceEnd Chunk added: [${currentChunk[0]}, ${end}]`);
+                this.logger.debug(
+                  `silenceEnd Chunk added: [${currentChunk[0]}, ${end}]`,
+                );
               }
             } else if (silenceStart) {
               const start = parseFloat(silenceStart[1]);
@@ -236,8 +245,9 @@ export class VideoProcessingConsumer {
                 currentChunk.push(start);
                 chunks.push(currentChunk);
                 currentChunk = [start];
-                lastSilenceEnd = start;
-                this.logger.debug(`silenceStart Chunk added: [${currentChunk[0]}, ${start}]`);
+                this.logger.debug(
+                  `silenceStart Chunk added: [${currentChunk[0]}, ${start}]`,
+                );
               }
             }
           })
@@ -279,7 +289,7 @@ export class VideoProcessingConsumer {
   private async transcribeChunks(
     filePath: string,
     chunks: number[][],
-  ): Promise<{ text: string; }> {
+  ): Promise<{ text: string }> {
     const transcripts = {
       text: '',
     };
@@ -298,7 +308,7 @@ export class VideoProcessingConsumer {
     start: number,
     end: number,
     chunkNumber: number,
-  ): Promise<{ text: string; }> {
+  ): Promise<{ text: string }> {
     try {
       const chunkPath = `/tmp/temp_chunk_${chunkNumber}.mp3`;
       this.logger.debug(
@@ -318,7 +328,9 @@ export class VideoProcessingConsumer {
       });
       const endChunking = Date.now();
       const chunkingTime = (endChunking - startChunking) / 1000;
-      this.logger.debug(`Chunk ${chunkNumber} extracted. Time taken: ${chunkingTime.toFixed(2)} seconds`);
+      this.logger.debug(
+        `Chunk ${chunkNumber} extracted. Time taken: ${chunkingTime.toFixed(2)} seconds`,
+      );
 
       const startTranscribing = Date.now();
       const transcript = await this.openai.audio.transcriptions.create({
@@ -328,10 +340,14 @@ export class VideoProcessingConsumer {
       });
       const endTranscribing = Date.now();
       const transcribingTime = (endTranscribing - startTranscribing) / 1000;
-      this.logger.debug(`Chunk ${chunkNumber} transcribed. Time taken: ${transcribingTime.toFixed(2)} seconds`);
+      this.logger.debug(
+        `Chunk ${chunkNumber} transcribed. Time taken: ${transcribingTime.toFixed(2)} seconds`,
+      );
 
       await unlink(chunkPath);
-      this.logger.debug(`Chunk ${chunkNumber} processed successfully. Total time: ${(chunkingTime + transcribingTime).toFixed(2)} seconds`);
+      this.logger.debug(
+        `Chunk ${chunkNumber} processed successfully. Total time: ${(chunkingTime + transcribingTime).toFixed(2)} seconds`,
+      );
 
       return {
         text: transcript.text,

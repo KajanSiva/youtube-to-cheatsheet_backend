@@ -54,6 +54,13 @@ export class YoutubeVideo {
   @Column({ length: 255, nullable: true })
   title: string | null;
 
+  @Column({ length: 255, nullable: true })
+  thumbnailUrl: string | null;
+
   @OneToMany(() => Cheatsheet, (cheatsheet) => cheatsheet.video)
   cheatsheets: Cheatsheet[];
+
+  get cheatsheetCount(): number {
+    return this.cheatsheets ? this.cheatsheets.length : 0;
+  }
 }

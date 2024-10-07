@@ -44,7 +44,14 @@ export class YoutubeVideosController {
   async getVideos() {
     try {
       const videos = await this.youtubeVideosService.getVideos();
-      return videos;
+      return videos.map((video) => ({
+        id: video.id,
+        youtubeId: video.youtubeId,
+        title: video.title,
+        processingStatus: video.processingStatus,
+        thumbnailUrl: video.thumbnailUrl,
+        cheatsheetCount: video.cheatsheetCount,
+      }));
     } catch (error) {
       throw new HttpException(
         'Internal server error',

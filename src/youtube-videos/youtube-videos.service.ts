@@ -13,7 +13,7 @@ export class YoutubeVideosService {
     @InjectQueue('video-processing') private videoProcessingQueue: Queue,
   ) {}
 
-  async createYoutubeVideo(url: string) {
+  async createYoutubeVideo(url: string): Promise<YoutubeVideo> {
     const youtubeId = this.extractYoutubeId(url);
     if (!youtubeId) {
       throw new Error('Invalid YouTube URL');
@@ -56,34 +56,10 @@ export class YoutubeVideosService {
     return match && match[2].length === 11 ? match[2] : null;
   }
 
-  async getVideos(): Promise<
-    {
-      id: string;
-      youtubeId: string;
-      title: string | null;
-      processingStatus: VideoProcessingStatus;
-      cheatsheetCount: number;
-    }[]
-  > {
-    const videos = await this.youtubeVideoRepository
-      .createQueryBuilder('video')
-      .leftJoin('video.cheatsheets', 'cheatsheet')
-      .select([
-        'video.id',
-        'video.youtubeId',
-        'video.title',
-        'video.processingStatus',
-      ])
-      .addSelect('COUNT(cheatsheet.id)', 'cheatsheetCount')
-      .groupBy('video.id')
-      .getRawMany();
-
-    return videos.map((video) => ({
-      id: video.video_id,
-      youtubeId: video.video_youtube_id,
-      title: video.video_title,
-      processingStatus: video.video_processing_status,
-      cheatsheetCount: parseInt(video.cheatsheetCount, 10),
-    }));
+  async getVideos(): Promise<YoutubeVideo[]> {
+    return this.youtubeVideoRepository.find({
+      relations: ['cheatsheets'],
+      select: ['id', 'youtubeId', 'title', 'processingStatus', 'thumbnailUrl'],
+    });
   }
 }
