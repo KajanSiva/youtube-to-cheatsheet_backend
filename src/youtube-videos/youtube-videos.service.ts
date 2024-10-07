@@ -62,4 +62,12 @@ export class YoutubeVideosService {
       select: ['id', 'youtubeId', 'title', 'processingStatus', 'thumbnailUrl'],
     });
   }
+
+  async getVideoById(id: string): Promise<YoutubeVideo> {
+    const video = await this.youtubeVideoRepository.findOne({ where: { id } });
+    if (!video) {
+      throw new NotFoundException(`Video with ID "${id}" not found`);
+    }
+    return video;
+  }
 }

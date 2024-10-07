@@ -59,4 +59,27 @@ export class YoutubeVideosController {
       );
     }
   }
+
+  @Get(':id')
+  async getVideoById(@Param('id') id: string) {
+    try {
+      const video = await this.youtubeVideosService.getVideoById(id);
+      return {
+        id: video.id,
+        youtubeId: video.youtubeId,
+        title: video.title,
+        processingStatus: video.processingStatus,
+        thumbnailUrl: video.thumbnailUrl,
+        cheatsheetCount: video.cheatsheetCount,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new HttpException(error.message, HttpStatus.NOT_FOUND);
+      }
+      throw new HttpException(
+        'Internal server error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 }
