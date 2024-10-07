@@ -50,14 +50,14 @@ Create a `.env` file in the root directory based on the `.env.sample` file.
 docker-compose up -d
 ```
 
-2. Run database migrations:
-```bash
-npm run migration:run
-```
-
-3. Start the application in development mode:
+2. Start the application in development mode:
 ```bash
 npm run start:dev
+```
+
+3. Run database migrations:
+```bash
+npm run migration:run
 ```
 
 The application will be available at `http://localhost:3000`.
