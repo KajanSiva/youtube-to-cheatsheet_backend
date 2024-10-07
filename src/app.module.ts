@@ -25,6 +25,7 @@ import { CheatsheetsModule } from './cheatsheets/cheatsheets.module';
         REDIS_HOST: Joi.string().required(),
         REDIS_PORT: Joi.number().default(6379),
         STORAGE_TYPE: Joi.string().valid('local', 's3').default('local'),
+        FRONTEND_URL: Joi.string().required(),
       }),
       isGlobal: true,
     }),
