@@ -28,6 +28,9 @@ Before running the application, make sure you have the following installed:
 
 ## Installation
 
+0. Install ffmpeg:
+- https://www.ffmpeg.org/download.html
+
 1. Clone the repository:
 ```bash
 git clone <repository-url>
