@@ -214,7 +214,7 @@ export class VideoProcessingConsumer {
 
         const duration = metadata.format.duration;
         const bitrate = metadata.format.bit_rate;
-        const targetChunkDuration = ((maxChunkSize * 8) / bitrate) * 0.5;
+        const targetChunkDuration = ((maxChunkSize * 8) / bitrate) * 0.4;
 
         this.logger.debug(
           `Audio duration: ${duration}, bitrate: ${bitrate}, target chunk duration: ${targetChunkDuration}`,
@@ -294,11 +294,18 @@ export class VideoProcessingConsumer {
       text: '',
     };
 
-    for (let i = 0; i < chunks.length; i++) {
-      const [start, end] = chunks[i];
-      const transcript = await this.transcribeChunk(filePath, start, end, i);
-      transcripts.text += transcript.text;
-    }
+    // Create an array of promises for each chunk transcription
+    const transcriptionPromises = chunks.map((chunk, index) =>
+      this.transcribeChunk(filePath, chunk[0], chunk[1], index)
+    );
+
+    // Wait for all transcriptions to complete
+    const results = await Promise.all(transcriptionPromises);
+
+    // Combine the results in order
+    results.forEach((result) => {
+      transcripts.text += result.text;
+    });
 
     return transcripts;
   }
