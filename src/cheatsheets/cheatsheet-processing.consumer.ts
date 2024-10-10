@@ -134,55 +134,43 @@ export class CheatsheetProcessingConsumer {
     language: string,
     focusedThemes: string[],
   ) {
-    const sectionDescriptions = `
-- summary: Brief overview capturing the essence of the entire video content.
-- key_points: Consolidated list of main topics or concepts discussed.
-- detailed_notes: Comprehensive and structured summary of the video content, including key arguments, examples, and explanations.
-- important_quotes: List of the most notable quotes or standout statements.
-- actions_takeaways: Compiled list of practical tips, steps, or lessons viewers can apply.
-- glossary: Definitions of important specialized terms or concepts introduced.
-- references_and_resources: Any external resources or citations mentioned.
-  `;
-
     const mapPrompt = PromptTemplate.fromTemplate(`
-Analyze the following part of a video transcript and create a partial summary. Focus on the content of this specific part.
-Generate the summary in ${language}.
+You are tasked with creating a detailed cheatsheet from a section of a YouTube video transcript in ${language}. Focus on extracting the most valuable information in a concise, easy-to-reference format. Your output should include:
 
-# Focus Themes:
-${focusedThemes.length > 0 ? focusedThemes.join(', ') : 'All themes'}
+1. Main Topic: Identify the primary subject of this section.
+2. Key Points: List 3-5 crucial pieces of information, using bullet points.
+3. Definitions: Note any important terms or concepts explained, with brief definitions.
+4. Resources: List any books, websites, or tools mentioned.
 
-# Summary Sections:
-${sectionDescriptions}
+Format your response using markdown for clarity and structure. Use bullet points for lists, bold for main topics, and italics for emphasis on key terms.
 
-# Transcript Part:
+Remember, the goal is to create content that will be easily understood and quickly referenced by someone who hasn't watched the video. Ensure all content is in ${language}.
+
+Do that on the following text:
 {text}
-
-Provide a concise summary focusing on the specified themes and sections:
   `);
 
     const combinePrompt = PromptTemplate.fromTemplate(`
-Create a comprehensive cheatsheet for the entire video content by synthesizing the following partial summaries. 
-Organize the information logically and eliminate redundancies.
-Generate the cheatsheet in ${language}.
+Your task is to create a comprehensive cheatsheet by combining and organizing the information from multiple sections of a YouTube video in ${language}. Follow these steps:
 
-# Focus Themes:
-${focusedThemes.length > 0 ? focusedThemes.join(', ') : 'All themes'}
+1. Summary: Begin with a brief (2-3 sentences) overview of the entire video's main topics.
 
-# Summary Sections:
-${sectionDescriptions}
+2. Key Points: Compile and organize all the key points from each section. Group related points together under relevant subheadings. Eliminate any redundancies.
 
+3. Definitions: Create a glossary of all important terms and concepts, organized alphabetically.
+
+4. Resources: Compile all mentioned resources into a single list.
+
+5. Structure your cheatsheet with clear headings and subheadings. Use markdown formatting for improved readability:
+   - Use # for main headings, ## for subheadings
+   - Use bullet points for lists
+   - Use bold for emphasis on important points
+   - Use code blocks for any code snippets or command-line instructions
+
+Your final output should be a well-organized, easy-to-navigate cheatsheet that captures the essence of the entire video in a format that's quick to reference and understand. Ensure all content is in ${language}.
+
+Do that on the following text:
 {text}
-
-Generate a final cheatsheet with these sections, ensuring each section adheres to its description:
-- summary
-- key_points
-- detailed_notes
-- important_quotes
-- actions_takeaways
-- glossary
-- references_and_resources
-
-Ensure the final cheatsheet is well-organized, covers the entire video content, and focuses on the specified themes:
   `);
 
     return loadSummarizationChain(model, {
@@ -200,35 +188,9 @@ Ensure the final cheatsheet is well-organized, covers the entire video content, 
     this.logger.debug('Generating structured output...');
 
     const schema = z.object({
-      summary: z
-        .string()
-        .describe(
-          'Brief overview capturing the essence of the entire video content.',
-        ),
-      keyPoints: z
-        .array(z.string())
-        .describe('Consolidated list of main topics or concepts discussed.'),
-      detailedNotes: z
-        .array(z.string())
-        .describe(
-          'Comprehensive and structured summary of the video content, including key arguments, examples, and explanations.',
-        ),
-      importantQuotes: z
-        .array(z.string())
-        .describe('List of the most notable quotes or standout statements.'),
-      actionsTakeaways: z
-        .array(z.string())
-        .describe(
-          'Compiled list of practical tips, steps, or lessons viewers can apply.',
-        ),
-      glossary: z
-        .array(z.string())
-        .describe(
-          'Definitions of important specialized terms or concepts introduced.',
-        ),
-      referencesAndResources: z
-        .array(z.string())
-        .describe('Any external resources or citations mentioned.'),
+      summary: z.array(z.string()).describe('Consolidated list of main topics or concepts discussed.'),
+      definitions: z.array(z.string()).describe('Consolidated list of main topics or concepts discussed.'),
+      resources: z.array(z.string()).describe('All mentioned resources.'),
     });
 
     const structuredLLM = model.withStructuredOutput(schema, {
@@ -236,17 +198,20 @@ Ensure the final cheatsheet is well-organized, covers the entire video content, 
     });
 
     const structuredOutputPrompt = PromptTemplate.fromTemplate(`
-Generate a JSON output based on the following text in ${language}:
-{text}
+Based on the comprehensive cheatsheet you've created in ${language}, generate a structured JSON output. Follow this format:
 
-Include the following sections:
-- summary: Brief overview capturing the essence of the entire video content.
-- key_points: Consolidated list of main topics or concepts discussed.
-- detailed_notes: Comprehensive and structured summary of the video content, including key arguments, examples, and explanations.
-- important_quotes: List of the most notable quotes or standout statements.
-- actions_takeaways: Compiled list of practical tips, steps, or lessons viewers can apply.
-- glossary: Definitions of important specialized terms or concepts introduced.
-- references_and_resources: Any external resources or citations mentioned.
+1. Summary: Begin with a brief (2-3 sentences) overview of the entire video's main topics.
+
+2. Key Points: Compile and organize all the key points from each section. Group related points together under relevant subheadings. Eliminate any redundancies.
+
+3. Definitions: Create a glossary of all important terms and concepts, organized alphabetically.
+
+4. Resources: Compile all mentioned resources into a single list.
+
+Ensure that all content is accurately represented in the JSON structure and is in ${language}. If any section is empty, include it with an empty array or object as appropriate. Escape any special characters in the JSON strings to ensure valid JSON output.
+
+Do that on the following text:
+{text}
     `);
 
     return await structuredLLM.invoke(
