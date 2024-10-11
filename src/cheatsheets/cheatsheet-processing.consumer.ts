@@ -6,7 +6,6 @@ import { Repository } from 'typeorm';
 import { Cheatsheet, CheatsheetProcessingStatus } from './cheatsheet.entity';
 import { YoutubeVideo } from '../youtube-videos/youtube-video.entity';
 import { StorageService } from '../common/storage/storage.interface';
-import { ChatOpenAI } from '@langchain/openai';
 import { loadSummarizationChain } from 'langchain/chains';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import { Document } from 'langchain/document';
@@ -14,6 +13,7 @@ import {
   createMapPrompt,
   createCombinePrompt,
 } from './prompts/cheatsheet-prompts';
+import { ChatAnthropic } from '@langchain/anthropic';
 
 @Injectable()
 @Processor('cheatsheet-processing')
@@ -107,7 +107,7 @@ export class CheatsheetProcessingConsumer {
   ): Promise<{ result: string }> {
     this.logger.debug('Starting summary generation...');
 
-    const model = this.initializeOpenAIModel();
+    const model = this.initializeAnthropicModel();
     const chain = this.createSummarizationChain(model);
 
     this.logger.debug('Generating summary...');
@@ -117,15 +117,16 @@ export class CheatsheetProcessingConsumer {
     return { result: result.text };
   }
 
-  private initializeOpenAIModel(): ChatOpenAI {
-    return new ChatOpenAI({
+  private initializeAnthropicModel(): ChatAnthropic {
+    return new ChatAnthropic({
       temperature: 0.3,
-      modelName: 'gpt-4o-2024-08-06',
+      modelName: 'claude-3-5-sonnet-20240620',
       maxTokens: 4000,
+      anthropicApiKey: process.env.ANTHROPIC_API_KEY,
     });
   }
 
-  private createSummarizationChain(model: ChatOpenAI) {
+  private createSummarizationChain(model: ChatAnthropic) {
     const mapPrompt = createMapPrompt();
     const combinePrompt = createCombinePrompt();
 

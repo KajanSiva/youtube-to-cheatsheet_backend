@@ -24,6 +24,7 @@
     "migration:revert": "npm run typeorm -- migration:revert -d src/config/datasource.ts"
   },
   "dependencies": {
+    "@langchain/anthropic": "^0.3.3",
     "@nestjs/bull": "^10.2.1",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.2.3",
