@@ -55,6 +55,9 @@ export class Cheatsheet {
   @Column({ nullable: true })
   error: string;
 
-  @Column({ length: 10, nullable: false })
+  @Column({ length: 10, nullable: true })
   language: string;
+
+  @Column({ type: 'text', nullable: true })
+  comment: string;
 }

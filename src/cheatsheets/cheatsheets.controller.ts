@@ -35,9 +35,8 @@ export class CheatsheetsController {
         id: cheatsheet.id,
         videoId: cheatsheet.video.id,
         processingStatus: cheatsheet.processingStatus,
-        neededTopics: cheatsheet.neededTopics,
+        comment: cheatsheet.comment,
         content: cheatsheet.content,
-        language: cheatsheet.language,
         createdAt: cheatsheet.createdAt,
         updatedAt: cheatsheet.updatedAt,
       };
@@ -60,8 +59,7 @@ export class CheatsheetsController {
         id: cheatsheet.id,
         videoId: cheatsheet.video.id,
         processingStatus: cheatsheet.processingStatus,
-        neededTopics: cheatsheet.neededTopics,
-        language: cheatsheet.language,
+        comment: cheatsheet.comment,
         createdAt: cheatsheet.createdAt,
         updatedAt: cheatsheet.updatedAt,
       }));

@@ -21,7 +21,7 @@ export class CheatsheetsService {
   async createCheatsheet(
     createCheatsheetDto: CreateCheatsheetDto,
   ): Promise<Cheatsheet> {
-    const { videoId, neededTopics, language } = createCheatsheetDto;
+    const { videoId, comment } = createCheatsheetDto;
 
     const video = await this.youtubeVideoRepository.findOne({
       where: { id: videoId },
@@ -32,8 +32,7 @@ export class CheatsheetsService {
 
     const newCheatsheet = this.cheatsheetRepository.create({
       video,
-      neededTopics,
-      language,
+      comment,
       processingStatus: CheatsheetProcessingStatus.PENDING,
     });
 
