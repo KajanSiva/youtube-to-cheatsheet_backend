@@ -10,8 +10,8 @@ import { loadSummarizationChain } from 'langchain/chains';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import { Document } from 'langchain/document';
 import {
-  createMapPrompt,
-  createCombinePrompt,
+  createRefinePrompt,
+  createQuestionPrompt,
 } from './prompts/cheatsheet-prompts';
 import { ChatAnthropic } from '@langchain/anthropic';
 
@@ -114,27 +114,27 @@ export class CheatsheetProcessingConsumer {
     const result = await chain.invoke({ input_documents: docs });
 
     this.logger.debug('Summary generation completed successfully.');
-    return { result: result.text };
+    return { result: result.output_text };
   }
 
   private initializeAnthropicModel(): ChatAnthropic {
     return new ChatAnthropic({
       temperature: 0.3,
       modelName: 'claude-3-5-sonnet-20240620',
-      maxTokens: 4000,
+      maxTokens: 4000, // TODO: iterate on this
       anthropicApiKey: process.env.ANTHROPIC_API_KEY,
     });
   }
 
   private createSummarizationChain(model: ChatAnthropic) {
-    const mapPrompt = createMapPrompt();
-    const combinePrompt = createCombinePrompt();
+    const refinePrompt = createRefinePrompt();
+    const questionPrompt = createQuestionPrompt();
 
     return loadSummarizationChain(model, {
-      type: 'map_reduce',
-      mapPrompt: mapPrompt,
-      combinePrompt: combinePrompt,
-    } as any);
+      type: 'refine',
+      questionPrompt,
+      refinePrompt,
+    });
   }
 
   private async updateCheatsheetStatus(
