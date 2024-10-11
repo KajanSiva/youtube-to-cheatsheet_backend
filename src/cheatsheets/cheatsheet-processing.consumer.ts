@@ -36,13 +36,13 @@ export class CheatsheetProcessingConsumer {
       const video = await this.getVideo(cheatsheet.video.id);
 
       const docs = await this.processTranscript(video.transcriptUrl);
-      const { structuredOutput } = await this.generateSummary(
+      const { result } = await this.generateSummary(
         docs,
         cheatsheet.language,
         cheatsheet.neededTopics,
       );
 
-      cheatsheet.content = structuredOutput;
+      cheatsheet.content = { text: result };
       cheatsheet.processingStatus = CheatsheetProcessingStatus.DONE;
       await this.cheatsheetRepository.save(cheatsheet);
 
@@ -102,7 +102,7 @@ export class CheatsheetProcessingConsumer {
     docs: Document[],
     language: string,
     focusedThemes: string[],
-  ): Promise<{ structuredOutput: any }> {
+  ): Promise<{ result: string }> {
     this.logger.debug('Starting summary generation...');
 
     const model = this.initializeOpenAIModel();
@@ -111,14 +111,8 @@ export class CheatsheetProcessingConsumer {
     this.logger.debug('Generating summary...');
     const result = await chain.invoke({ input_documents: docs });
 
-    const structuredOutput = await this.generateStructuredOutput(
-      model,
-      result.text,
-      language,
-    );
-
     this.logger.debug('Summary generation completed successfully.');
-    return { structuredOutput };
+    return { result: result.text };
   }
 
   private initializeOpenAIModel(): ChatOpenAI {
@@ -190,68 +184,6 @@ Ensure the final cheatsheet is well-organized, covers the entire video content, 
       mapPrompt: mapPrompt,
       combinePrompt: combinePrompt,
     } as any);
-  }
-
-  private async generateStructuredOutput(
-    model: ChatOpenAI,
-    text: string,
-    language: string,
-  ) {
-    this.logger.debug('Generating structured output...');
-
-    const schema = z.object({
-      summary: z
-        .string()
-        .describe(
-          'Brief overview capturing the essence of the entire video content.',
-        ),
-      keyPoints: z
-        .array(z.string())
-        .describe('Consolidated list of main topics or concepts discussed.'),
-      detailedNotes: z
-        .array(z.string())
-        .describe(
-          'Comprehensive and structured summary of the video content, including key arguments, examples, and explanations.',
-        ),
-      importantQuotes: z
-        .array(z.string())
-        .describe('List of the most notable quotes or standout statements.'),
-      actionsTakeaways: z
-        .array(z.string())
-        .describe(
-          'Compiled list of practical tips, steps, or lessons viewers can apply.',
-        ),
-      glossary: z
-        .array(z.string())
-        .describe(
-          'Definitions of important specialized terms or concepts introduced.',
-        ),
-      referencesAndResources: z
-        .array(z.string())
-        .describe('Any external resources or citations mentioned.'),
-    });
-
-    const structuredLLM = model.withStructuredOutput(schema, {
-      strict: true,
-    });
-
-    const structuredOutputPrompt = PromptTemplate.fromTemplate(`
-Generate a JSON output based on the following text in ${language}:
-{text}
-
-Include the following sections:
-- summary: Brief overview capturing the essence of the entire video content.
-- key_points: Consolidated list of main topics or concepts discussed.
-- detailed_notes: Comprehensive and structured summary of the video content, including key arguments, examples, and explanations.
-- important_quotes: List of the most notable quotes or standout statements.
-- actions_takeaways: Compiled list of practical tips, steps, or lessons viewers can apply.
-- glossary: Definitions of important specialized terms or concepts introduced.
-- references_and_resources: Any external resources or citations mentioned.
-    `);
-
-    return await structuredLLM.invoke(
-      await structuredOutputPrompt.formatPromptValue({ text }),
-    );
   }
 
   private async updateCheatsheetStatus(
