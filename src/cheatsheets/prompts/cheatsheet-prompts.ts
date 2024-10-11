@@ -1,69 +1,143 @@
 import { PromptTemplate } from '@langchain/core/prompts';
 
-export const createMapPrompt = (language: string, focusedThemes: string[]) => {
-  const sectionDescriptions = `
-- summary: Brief overview capturing the essence of the entire video content.
-- key_points: Consolidated list of main topics or concepts discussed.
-- detailed_notes: Comprehensive and structured summary of the video content, including key arguments, examples, and explanations.
-- important_quotes: List of the most notable quotes or standout statements.
-- actions_takeaways: Compiled list of practical tips, steps, or lessons viewers can apply.
-- glossary: Definitions of important specialized terms or concepts introduced.
-- references_and_resources: Any external resources or citations mentioned.
-  `;
-
+export const createMapPrompt = () => {
   return PromptTemplate.fromTemplate(`
-Analyze the following part of a video transcript and create a partial summary. Focus on the content of this specific part.
-Generate the summary in ${language}.
+Instructions:
 
-# Focus Themes:
-${focusedThemes.length > 0 ? focusedThemes.join(', ') : 'All themes'}
+You are a helpful assistant tasked with analyzing a portion of a podcast transcript to contribute to a detailed cheatsheet for a busy product manager. Please focus solely on the content within this chunk. For each applicable section listed below, write comprehensive sentences that thoroughly explain each point. Ensure the result is formatted in Markdown with appropriate headings and subheadings.
 
-# Summary Sections:
-${sectionDescriptions}
+Sections to Include (as relevant to this chunk):
 
-# Transcript Part:
+Episode Summary
+
+Brief Synopsis
+Key Discussion Points
+Key Takeaways
+
+Actionable Insights
+Lessons Learned
+Notable Quotes
+
+Memorable Statements
+Speaker Attribution
+Frameworks and Models Discussed
+
+Descriptions
+Applications
+Case Studies and Examples
+
+Overview
+Insights
+Industry Trends and Insights
+
+Current Trends
+Future Predictions
+Tools and Resources
+
+Recommended Tools
+Additional Resources
+Challenges and Solutions
+
+Identified Challenges
+Proposed Solutions
+Questions for Reflection
+
+Self-Assessment Questions
+Team Discussion Points
+Action Items
+
+Immediate Steps
+Long-Term Strategies
+Personal Anecdotes and Stories
+
+Engaging Narratives
+Morals or Takeaways
+Entertainment Highlights
+
+Humorous Moments
+Interesting Tidbits
+Guidelines:
+
+Writing Style: Use clear, professional language suitable for a seasoned product manager. Ensure the tone is engaging and informative.
+Focus: Only include information present in this transcript chunk.
+Detail and Depth: Provide sufficient detail to make the summary meaningful.
+Markdown Format: Structure your response using Markdown syntax, including headings and subheadings.
+
+Transcript Chunk:
 {text}
-
-Provide a concise summary focusing on the specified themes and sections:
-  `);
+`);
 };
 
-export const createCombinePrompt = (
-  language: string,
-  focusedThemes: string[],
-) => {
-  const sectionDescriptions = `
-- summary: Brief overview capturing the essence of the entire video content.
-- key_points: Consolidated list of main topics or concepts discussed.
-- detailed_notes: Comprehensive and structured summary of the video content, including key arguments, examples, and explanations.
-- important_quotes: List of the most notable quotes or standout statements.
-- actions_takeaways: Compiled list of practical tips, steps, or lessons viewers can apply.
-- glossary: Definitions of important specialized terms or concepts introduced.
-- references_and_resources: Any external resources or citations mentioned.
-  `;
-
+export const createCombinePrompt = () => {
   return PromptTemplate.fromTemplate(`
-Create a comprehensive cheatsheet for the entire video content by synthesizing the following partial summaries. 
-Organize the information logically and eliminate redundancies.
-Generate the cheatsheet in ${language}.
+Instructions:
 
-# Focus Themes:
-${focusedThemes.length > 0 ? focusedThemes.join(', ') : 'All themes'}
+You are a helpful assistant tasked with combining summaries from multiple transcript chunks into a comprehensive cheatsheet for a busy product manager. Using the provided summaries, create a unified document that covers all relevant sections listed below. Write in full sentences and ensure the final result is formatted in Markdown with appropriate headings and subheadings.
 
-# Summary Sections:
-${sectionDescriptions}
+Sections to Include:
 
+Podcast Overview
+
+Title and Episode Number
+Host and Guest Information
+Duration
+Episode Summary
+
+Brief Synopsis
+Key Discussion Points
+Key Takeaways
+
+Actionable Insights
+Lessons Learned
+Notable Quotes
+
+Memorable Statements
+Speaker Attribution
+Frameworks and Models Discussed
+
+Descriptions
+Applications
+Case Studies and Examples
+
+Overview
+Insights
+Industry Trends and Insights
+
+Current Trends
+Future Predictions
+Tools and Resources
+
+Recommended Tools
+Additional Resources
+Challenges and Solutions
+
+Identified Challenges
+Proposed Solutions
+Questions for Reflection
+
+Self-Assessment Questions
+Team Discussion Points
+Action Items
+
+Immediate Steps
+Long-Term Strategies
+Personal Anecdotes and Stories
+
+Engaging Narratives
+Morals or Takeaways
+Entertainment Highlights
+
+Humorous Moments
+Interesting Tidbits
+Guidelines:
+
+Integration: Seamlessly integrate information from all summaries, ensuring a logical flow and coherence.
+Elimination of Redundancy: Remove duplicate information and resolve any inconsistencies.
+Writing Style: Use clear, professional language suitable for a seasoned product manager. Maintain an engaging and informative tone throughout.
+Detail and Depth: Provide sufficient detail to make the cheatsheet a standalone resource.
+Markdown Format: Use Markdown syntax for headings, subheadings, lists, and emphasis where appropriate.
+
+Summaries of Transcript Chunks:
 {text}
-
-Generate a final cheatsheet with these sections, ensuring each section adheres to its description:
-- summary
-- key_points
-- detailed_notes
-- important_quotes
-- actions_takeaways
-- glossary
-- references_and_resources
-
-Ensure the final cheatsheet is well-organized, covers the entire video content, and focuses on the specified themes:
   `);
 };

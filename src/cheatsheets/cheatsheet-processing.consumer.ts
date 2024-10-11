@@ -108,7 +108,7 @@ export class CheatsheetProcessingConsumer {
     this.logger.debug('Starting summary generation...');
 
     const model = this.initializeOpenAIModel();
-    const chain = this.createSummarizationChain(model, language, focusedThemes);
+    const chain = this.createSummarizationChain(model);
 
     this.logger.debug('Generating summary...');
     const result = await chain.invoke({ input_documents: docs });
@@ -120,18 +120,14 @@ export class CheatsheetProcessingConsumer {
   private initializeOpenAIModel(): ChatOpenAI {
     return new ChatOpenAI({
       temperature: 0.3,
-      modelName: 'gpt-4o-mini-2024-07-18',
+      modelName: 'gpt-4o-2024-08-06',
       maxTokens: 4000,
     });
   }
 
-  private createSummarizationChain(
-    model: ChatOpenAI,
-    language: string,
-    focusedThemes: string[],
-  ) {
-    const mapPrompt = createMapPrompt(language, focusedThemes);
-    const combinePrompt = createCombinePrompt(language, focusedThemes);
+  private createSummarizationChain(model: ChatOpenAI) {
+    const mapPrompt = createMapPrompt();
+    const combinePrompt = createCombinePrompt();
 
     return loadSummarizationChain(model, {
       type: 'map_reduce',
