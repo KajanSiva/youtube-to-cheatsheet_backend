@@ -395,7 +395,7 @@ export class VideoProcessingConsumer {
 
     const textSplitter = new RecursiveCharacterTextSplitter({
       chunkSize: 100000,
-      chunkOverlap: 20000,
+      chunkOverlap: 10000,
     });
 
     const docs = await textSplitter.splitDocuments([
