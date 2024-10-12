@@ -1,48 +1,5 @@
 import { PromptTemplate } from '@langchain/core/prompts';
 
-const contentStructure = `
-
-1. Podcast Overview
-    * Host and Guest Information
-2. Episode Summary
-    * Brief Synopsis
-    * Key Discussion Points
-3. Key Takeaways
-    * Actionable Insights
-    * Lessons Learned
-4. Notable Quotes
-    * Memorable Statements
-    * Speaker Attribution
-5. Frameworks and Models Discussed
-    * Descriptions
-    * Applications
-6. Case Studies and Examples
-    * Overview
-    * Insights
-7. Industry Trends and Insights
-    * Current Trends
-    * Future Predictions
-8. Tools and Resources
-    * Recommended Tools
-    * Additional Resources
-9. Challenges and Solutions
-    * Identified Challenges
-    * Proposed Solutions
-10. Questions for Reflection
-    * Self-Assessment Questions
-    * Team Discussion Points
-11. Action Items
-    * Immediate Steps
-    * Long-Term Strategies
-12. Personal Anecdotes and Stories
-    * Engaging Narratives
-    * Morals or Takeaways
-13. Entertainment Highlights
-    * Humorous Moments
-    * Interesting Tidbits
-
-`;
-
 const guidelines = `
 
 * Writing Style: Use clear, professional language. Ensure the tone is engaging and informative.
@@ -58,7 +15,7 @@ const persona = `
 This summary is for a busy product manager. Who wants to learn and understand the content of the podcast in depth.
 `;
 
-export const createQuestionPrompt = () => {
+export const createQuestionPrompt = (contentStructure) => {
   return PromptTemplate.fromTemplate(`
 # Instructions:
 
@@ -79,7 +36,7 @@ ${guidelines}
 `);
 };
 
-export const createRefinePrompt = () => {
+export const createRefinePrompt = (contentStructure) => {
   return PromptTemplate.fromTemplate(`
 # Instructions:
 
@@ -110,7 +67,7 @@ ${guidelines}
 `);
 };
 
-export const createOneShotPrompt = () => {
+export const createOneShotPrompt = (contentStructure) => {
   return PromptTemplate.fromTemplate(`
 # Instructions:
 
@@ -248,4 +205,95 @@ You are a helpful assistant tasked with identifying the target persona for a vid
 Target Persona:
 [Provide a detailed description of the target persona based on the full transcript]
 `);
+};
+
+export const createContentStructurePrompt = () => {
+  return PromptTemplate.fromTemplate(`
+# Instructions:
+
+You are a helpful assistant tasked with creating a content structure for a cheatsheet based on a video's main theme and target persona. Your goal is to design a comprehensive and relevant structure that will best serve the needs of the target audience.
+
+# Video Information:
+Main Theme: {mainTheme}
+Target Persona: {persona}
+
+# Guidelines:
+- Create a detailed content structure with main sections and subsections
+- Ensure the structure is relevant to the main theme and tailored to the target persona
+- Use clear and concise headings for each section
+- Include 8-12 main sections, each with 2-4 subsections
+- Format the structure using Markdown syntax
+
+# Example Content Structure:
+
+## Persona
+Professional role and industry:
+- Product managers, engineers, or designers working in tech companies, particularly those focused on AI and machine learning products
+
+Experience level:
+- Mid to senior-level professionals with several years of experience in product development or technology
+
+Specific interests or challenges relevant to the video content:
+- Interested in AI and machine learning applications, particularly in natural language processing and content generation
+- Curious about innovative product development processes and how to build disruptive products within large organizations
+- Facing challenges in creating user-friendly interfaces for complex AI technologies
+- Interested in the intersection of technology and content creation, especially in audio and text formats
+
+Goals or objectives they might have that align with the video's topic:
+- Seeking inspiration for new AI-powered product ideas
+- Looking to understand how to build and scale AI products rapidly
+- Wanting to learn about unconventional product development approaches within large tech companies
+- Aiming to create more engaging and personalized user experiences using AI
+- Interested in exploring new ways to transform and present information using AI technologies
+- Seeking to understand the potential future directions of AI in content creation and knowledge management
+
+This persona would likely be someone who is passionate about pushing the boundaries of what's possible with AI, values user-centric design, and is interested in learning from innovative approaches to product development in the tech industry.
+
+## Main Theme
+The main theme of this podcast episode is a discussion about Notebook LM, an innovative AI product developed by Google Labs. The guest, Riza Martin, who is the product lead for Notebook LM, shares insights into the product's development, its unique features (especially the audio overview function), and how it was created within Google's organizational structure. The conversation covers the product's origins as a 20% project, its rapid growth, and its potential future applications, highlighting how Notebook LM represents a new approach to AI-powered content creation and interaction.
+
+## Content Structure
+
+1. Podcast Overview
+    * Host and Guest Information
+2. Episode Summary
+    * Brief Synopsis
+    * Key Discussion Points
+3. Key Takeaways
+    * Actionable Insights
+    * Lessons Learned
+4. Notable Quotes
+    * Memorable Statements
+    * Speaker Attribution
+5. Frameworks and Models Discussed
+    * Descriptions
+    * Applications
+6. Case Studies and Examples
+    * Overview
+    * Insights
+7. Industry Trends and Insights
+    * Current Trends
+    * Future Predictions
+8. Tools and Resources
+    * Recommended Tools
+    * Additional Resources
+9. Challenges and Solutions
+    * Identified Challenges
+    * Proposed Solutions
+10. Questions for Reflection
+    * Self-Assessment Questions
+    * Team Discussion Points
+11. Action Items
+    * Immediate Steps
+    * Long-Term Strategies
+12. Personal Anecdotes and Stories
+    * Engaging Narratives
+    * Morals or Takeaways
+13. Entertainment Highlights
+    * Humorous Moments
+    * Interesting Tidbits
+
+# Generated Content Structure:
+[Provide the content structure here, using Markdown formatting for headings and subheadings]
+  `);
 };

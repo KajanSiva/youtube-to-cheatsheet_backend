@@ -12,6 +12,7 @@ import {
   createRefinePrompt,
   createQuestionPrompt,
   createOneShotPrompt,
+  createContentStructurePrompt,
 } from './prompts/cheatsheet-prompts';
 import { ChatAnthropic } from '@langchain/anthropic';
 import {
@@ -41,11 +42,16 @@ export class CheatsheetProcessingConsumer {
       const cheatsheet = await this.getCheatsheet(job.data.cheatsheetId);
       const video = await this.getVideo(cheatsheet.video.id);
 
+      // Generate content structure
+      const contentStructure = await this.generateContentStructure(video);
+      cheatsheet.contentStructure = contentStructure;
+
       const docs = await this.processTranscript(video.transcriptUrl);
       const { result } = await this.generateSummary(
         docs,
         cheatsheet.language,
         cheatsheet.neededTopics,
+        contentStructure,
       );
 
       cheatsheet.content = { text: result };
@@ -61,6 +67,21 @@ export class CheatsheetProcessingConsumer {
         error.message,
       );
     }
+  }
+
+  private async generateContentStructure(video: YoutubeVideo): Promise<string> {
+    this.logger.debug('Generating content structure');
+    const model = this.initializeAnthropicModel();
+    const contentStructurePrompt = createContentStructurePrompt();
+
+    const result = await model.invoke(
+      await contentStructurePrompt.format({
+        mainTheme: video.mainTheme,
+        persona: video.persona,
+      }),
+    );
+
+    return result.content.toString();
   }
 
   private async getCheatsheet(cheatsheetId: string): Promise<Cheatsheet> {
@@ -108,15 +129,16 @@ export class CheatsheetProcessingConsumer {
     docs: Document[],
     language: string,
     focusedThemes: string[],
+    contentStructure: string,
   ): Promise<{ result: string }> {
     this.logger.debug('Starting summary generation...');
 
     const model = this.initializeAnthropicModel();
 
     const options: SummaryGeneratorOptions = {
-      refinePrompt: createRefinePrompt(),
-      questionPrompt: createQuestionPrompt(),
-      oneShotPrompt: createOneShotPrompt(),
+      refinePrompt: createRefinePrompt(contentStructure),
+      questionPrompt: createQuestionPrompt(contentStructure),
+      oneShotPrompt: createOneShotPrompt(contentStructure),
       model,
     };
 

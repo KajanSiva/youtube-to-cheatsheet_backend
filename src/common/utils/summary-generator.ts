@@ -12,7 +12,7 @@ export interface SummaryGeneratorOptions {
 
 export async function generateSummary(
   docs: Document[],
-  options: SummaryGeneratorOptions
+  options: SummaryGeneratorOptions,
 ): Promise<string> {
   const { refinePrompt, questionPrompt, oneShotPrompt, model } = options;
 

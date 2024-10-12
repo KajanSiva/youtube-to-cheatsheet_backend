@@ -4,6 +4,8 @@ import {
   Column,
   ManyToOne,
   JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { YoutubeVideo } from '../youtube-videos/youtube-video.entity';
 
@@ -60,4 +62,7 @@ export class Cheatsheet {
 
   @Column({ type: 'text', nullable: true })
   comment: string;
+
+  @Column({ type: 'text', nullable: true })
+  contentStructure: string;
 }
