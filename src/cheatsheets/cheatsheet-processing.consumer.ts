@@ -6,7 +6,6 @@ import { Repository } from 'typeorm';
 import { Cheatsheet, CheatsheetProcessingStatus } from './cheatsheet.entity';
 import { YoutubeVideo } from '../youtube-videos/youtube-video.entity';
 import { StorageService } from '../common/storage/storage.interface';
-import { loadSummarizationChain, StuffDocumentsChain } from 'langchain/chains';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import { Document } from 'langchain/document';
 import {
@@ -15,6 +14,10 @@ import {
   createOneShotPrompt,
 } from './prompts/cheatsheet-prompts';
 import { ChatAnthropic } from '@langchain/anthropic';
+import {
+  generateSummary,
+  SummaryGeneratorOptions,
+} from '../common/utils/summary-generator';
 
 @Injectable()
 @Processor('cheatsheet-processing')
@@ -108,38 +111,22 @@ export class CheatsheetProcessingConsumer {
   ): Promise<{ result: string }> {
     this.logger.debug('Starting summary generation...');
 
-    const chunkCount = docs.length;
-    const refinePrompt = createRefinePrompt();
-    const questionPrompt = createQuestionPrompt();
-    const oneShotPrompt = createOneShotPrompt();
-
     const model = this.initializeAnthropicModel();
 
-    if (chunkCount > 1) {
-      const chain = loadSummarizationChain(model, {
-        type: 'refine',
-        questionPrompt,
-        refinePrompt,
-      });
-
-      this.logger.debug('Generating summary...');
-
-      const result = await chain.invoke({ input_documents: docs });
-
-      this.logger.debug('Summary generation completed successfully.');
-
-      return { result: result.output_text };
-    }
-
-    const chain = oneShotPrompt.pipe(model);
+    const options: SummaryGeneratorOptions = {
+      refinePrompt: createRefinePrompt(),
+      questionPrompt: createQuestionPrompt(),
+      oneShotPrompt: createOneShotPrompt(),
+      model,
+    };
 
     this.logger.debug('Generating summary...');
 
-    const result = await chain.invoke({ text: docs[0].pageContent });
+    const result = await generateSummary(docs, options);
 
     this.logger.debug('Summary generation completed successfully.');
 
-    return { result: result.content.toString() };
+    return { result };
   }
 
   private initializeAnthropicModel(): ChatAnthropic {
