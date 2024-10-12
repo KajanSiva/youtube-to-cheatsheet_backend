@@ -51,6 +51,8 @@ export class YoutubeVideosController {
         processingStatus: video.processingStatus,
         thumbnailUrl: video.thumbnailUrl,
         cheatsheetCount: video.cheatsheetCount,
+        persona: video.persona,
+        mainTheme: video.mainTheme,
       }));
     } catch (error) {
       throw new HttpException(
@@ -71,6 +73,8 @@ export class YoutubeVideosController {
         processingStatus: video.processingStatus,
         thumbnailUrl: video.thumbnailUrl,
         cheatsheetCount: video.cheatsheetCount,
+        persona: video.persona,
+        mainTheme: video.mainTheme,
       };
     } catch (error) {
       if (error instanceof NotFoundException) {

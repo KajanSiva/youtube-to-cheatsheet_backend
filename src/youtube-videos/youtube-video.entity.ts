@@ -63,4 +63,10 @@ export class YoutubeVideo {
   get cheatsheetCount(): number {
     return this.cheatsheets ? this.cheatsheets.length : 0;
   }
+
+  @Column({ type: 'text', nullable: true })
+  persona: string | null;
+
+  @Column({ name: 'main_theme', type: 'text', nullable: true })
+  mainTheme: string | null;
 }

@@ -132,3 +132,120 @@ ${guidelines}
 {text}
   `);
 };
+
+/* Main theme & persona */
+export const createMainThemeQuestionPrompt = () => {
+  return PromptTemplate.fromTemplate(`
+# Instructions:
+
+You are a helpful assistant tasked with identifying the main theme of a video based on the first chunk of its transcript. Focus solely on the content within this transcript chunk. Your goal is to analyze the content and summarize the primary topic or subject matter in one or two sentences, capturing the essence of the discussion.
+
+# Transcript Chunk:
+{text}
+
+Main Theme:
+[Provide a concise summary of the main theme based on this chunk]
+`);
+};
+
+export const createMainThemeRefinePrompt = () => {
+  return PromptTemplate.fromTemplate(`
+# Instructions:
+
+You are a helpful assistant tasked with refining and expanding the identification of a video's main theme. Using the existing theme summary and new information from an additional chunk of the video transcript, create an updated and comprehensive main theme description. Your goals are to:
+* Integrate New Information: Incorporate relevant details from the new transcript chunk into the existing theme summary.
+* Maintain Coherence: Ensure the updated theme description is clear and concise.
+* Enhance Accuracy: Provide additional context if necessary to better capture the video's main subject matter.
+* Focus on Relevance: Prioritize information that best represents the overall theme of the video.
+
+# Existing Theme Summary:
+{existing_answer}
+
+# New Transcript Chunk:
+{text}
+
+# Updated Main Theme:
+[Provide the refined main theme description here, incorporating insights from both the existing summary and the new chunk.]
+`);
+};
+
+export const createMainThemeOneShotPrompt = () => {
+  return PromptTemplate.fromTemplate(`
+# Instructions:
+
+You are a helpful assistant tasked with identifying the main theme of a video based on its full transcript. Please focus solely on the content within this transcript. Your goal is to analyze the content and summarize the primary topic or subject matter in one or two sentences.
+
+# Transcript:
+{text}
+
+Main Theme:
+[Provide a concise summary of the main theme based on the full transcript]
+`);
+};
+
+export const createTargetPersonaQuestionPrompt = () => {
+  return PromptTemplate.fromTemplate(`
+# Instructions:
+
+You are a helpful assistant tasked with identifying the target persona for a video based on the first chunk of its transcript. Your goal is to determine the type of audience that would most benefit from the content and describe this persona in detail.
+
+# Persona Description Format:
+- Professional role and industry
+- Experience level
+- Specific interests or challenges relevant to the video content
+- Goals or objectives they might have that align with the video's topic
+
+# Transcript Chunk:
+{text}
+
+Target Persona:
+[Provide a detailed description of the target persona based on this chunk]
+`);
+};
+
+export const createTargetPersonaRefinePrompt = () => {
+  return PromptTemplate.fromTemplate(`
+# Instructions:
+
+You are a helpful assistant tasked with refining and expanding the identification of a video's target persona. Using the existing persona description and new information from an additional chunk of the video transcript, create an updated and comprehensive target persona description. Your goals are to:
+* Integrate New Information: Incorporate relevant details from the new transcript chunk into the existing persona description.
+* Maintain Coherence: Ensure the updated persona description is clear and detailed.
+* Enhance Accuracy: Provide additional context if necessary to better capture the intended audience.
+* Focus on Relevance: Prioritize information that best represents the target persona for the video content.
+
+# Persona Description Format:
+- Professional role and industry
+- Experience level
+- Specific interests or challenges relevant to the video content
+- Goals or objectives they might have that align with the video's topic
+
+# Existing Persona Description:
+{existing_answer}
+
+# New Transcript Chunk:
+{text}
+
+# Updated Target Persona:
+[Provide the refined target persona description here, incorporating insights from both the existing description and the new chunk.]
+`);
+};
+
+export const createTargetPersonaOneShotPrompt = () => {
+  return PromptTemplate.fromTemplate(`
+# Instructions:
+
+You are a helpful assistant tasked with identifying the target persona for a video based on its full transcript. Your goal is to determine the type of audience that would most benefit from the content and describe this persona in detail.
+
+# Persona Description Format:
+- Professional role and industry
+- Experience level
+- Specific interests or challenges relevant to the video content
+- Goals or objectives they might have that align with the video's topic
+
+# Transcript:
+{text}
+
+Target Persona:
+[Provide a detailed description of the target persona based on the full transcript]
+`);
+};

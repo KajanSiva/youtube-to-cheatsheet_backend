@@ -19,18 +19,26 @@ export class YoutubeVideosService {
       throw new Error('Invalid YouTube URL');
     }
 
-    const newVideo = this.youtubeVideoRepository.create({
-      youtubeId,
-      processingStatus: VideoProcessingStatus.PENDING,
+    // Check if the video already exists
+    let video = await this.youtubeVideoRepository.findOne({
+      where: { youtubeId },
     });
 
-    const savedVideo = await this.youtubeVideoRepository.save(newVideo);
+    if (!video) {
+      // If the video doesn't exist, create a new one
+      const newVideo = this.youtubeVideoRepository.create({
+        youtubeId,
+        processingStatus: VideoProcessingStatus.PENDING,
+      });
+      video = await this.youtubeVideoRepository.save(newVideo);
+    }
 
+    // Add to queue
     await this.videoProcessingQueue.add('process-video', {
-      videoId: savedVideo.id,
+      videoId: video.id,
     });
 
-    return savedVideo;
+    return video;
   }
 
   async getDiscussionTopics(id: string): Promise<object> {
@@ -59,12 +67,31 @@ export class YoutubeVideosService {
   async getVideos(): Promise<YoutubeVideo[]> {
     return this.youtubeVideoRepository.find({
       relations: ['cheatsheets'],
-      select: ['id', 'youtubeId', 'title', 'processingStatus', 'thumbnailUrl'],
+      select: [
+        'id',
+        'youtubeId',
+        'title',
+        'processingStatus',
+        'thumbnailUrl',
+        'persona',
+        'mainTheme',
+      ],
     });
   }
 
   async getVideoById(id: string): Promise<YoutubeVideo> {
-    const video = await this.youtubeVideoRepository.findOne({ where: { id } });
+    const video = await this.youtubeVideoRepository.findOne({
+      where: { id },
+      select: [
+        'id',
+        'youtubeId',
+        'title',
+        'processingStatus',
+        'thumbnailUrl',
+        'persona',
+        'mainTheme',
+      ],
+    });
     if (!video) {
       throw new NotFoundException(`Video with ID "${id}" not found`);
     }
