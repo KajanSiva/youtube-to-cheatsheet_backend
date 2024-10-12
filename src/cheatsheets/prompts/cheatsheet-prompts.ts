@@ -269,3 +269,62 @@ Sections to Include (as relevant):
 [Provide the full, updated cheatsheet summary here, incorporating all relevant information from both the existing summary and the new chunk. Ensure all applicable sections are included and properly formatted in Markdown.]
 `);
 };
+
+export const createOneShotPrompt = () => {
+  return PromptTemplate.fromTemplate(`
+# Instructions:
+
+You are a helpful assistant tasked with creating a detailed cheatsheet based on a video transcript for a busy product manager. Please focus solely on the content within this transcript.
+For each section, write comprehensive sentences that thoroughly explain each point, rather than using brief bullet points. The goal is to produce a rich, informative summary that entertains and enhances the knowledge of a busy product manager.
+
+Sections to Include (as relevant):
+
+1. Episode Summary
+    * Brief Synopsis
+    * Key Discussion Points
+2. Key Takeaways
+    * Actionable Insights
+    * Lessons Learned
+3. Notable Quotes
+    * Memorable Statements (with speaker Attribution if possible)
+4. Frameworks and Models Discussed
+    * Descriptions
+    * Applications
+5. Case Studies and Examples
+    * Overview
+    * Insights
+6. Industry Trends and Insights
+    * Current Trends
+    * Future Predictions
+7. Tools and Resources
+    * Recommended Tools
+    * Additional Resources
+8. Challenges and Solutions
+    * Identified Challenges
+    * Proposed Solutions
+9. Questions for Reflection
+    * Self-Assessment Questions
+    * Team Discussion Points
+10. Action Items
+    * Immediate Steps
+    * Long-Term Strategies
+11. Personal Anecdotes and Stories
+    * Engaging Narratives
+    * Morals or Takeaways
+12. Entertainment Highlights
+    * Humorous Moments
+    * Interesting Tidbits
+
+# Guidelines:
+
+* Writing Style: Use clear, professional language suitable for a seasoned product manager. Ensure the tone is engaging and informative.
+* Focus: Only include information present in this transcript.
+* Detail and Depth: Provide sufficient detail to make the summary useful for an experimented product manager.
+* Organization: Present the information in the order of the sections above, using headings and subheadings for clarity.
+* Detail and Depth: Provide sufficient detail in each section to make the cheatsheet a standalone resource, allowing the reader to fully grasp the content without having listened to the podcast.
+* Avoid Plagiarism: Paraphrase the content from the transcript in your own words. If direct quotes are used, enclose them in quotation marks and attribute them appropriately.
+
+# Transcript:
+{text}
+  `);
+};

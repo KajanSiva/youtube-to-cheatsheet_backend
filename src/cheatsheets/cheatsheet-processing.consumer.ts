@@ -6,12 +6,13 @@ import { Repository } from 'typeorm';
 import { Cheatsheet, CheatsheetProcessingStatus } from './cheatsheet.entity';
 import { YoutubeVideo } from '../youtube-videos/youtube-video.entity';
 import { StorageService } from '../common/storage/storage.interface';
-import { loadSummarizationChain } from 'langchain/chains';
+import { loadSummarizationChain, StuffDocumentsChain } from 'langchain/chains';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import { Document } from 'langchain/document';
 import {
   createRefinePrompt,
   createQuestionPrompt,
+  createOneShotPrompt,
 } from './prompts/cheatsheet-prompts';
 import { ChatAnthropic } from '@langchain/anthropic';
 
@@ -88,8 +89,8 @@ export class CheatsheetProcessingConsumer {
     const transcript = transcriptJson.text;
 
     const textSplitter = new RecursiveCharacterTextSplitter({
-      chunkSize: 10000,
-      chunkOverlap: 200,
+      chunkSize: 100000,
+      chunkOverlap: 20000,
     });
 
     const docs = await textSplitter.splitDocuments([
@@ -107,33 +108,46 @@ export class CheatsheetProcessingConsumer {
   ): Promise<{ result: string }> {
     this.logger.debug('Starting summary generation...');
 
+    const chunkCount = docs.length;
+    const refinePrompt = createRefinePrompt();
+    const questionPrompt = createQuestionPrompt();
+    const oneShotPrompt = createOneShotPrompt();
+
     const model = this.initializeAnthropicModel();
-    const chain = this.createSummarizationChain(model);
+
+    if (chunkCount > 1) {
+      const chain = loadSummarizationChain(model, {
+        type: 'refine',
+        questionPrompt,
+        refinePrompt,
+      });
+
+      this.logger.debug('Generating summary...');
+
+      const result = await chain.invoke({ input_documents: docs });
+
+      this.logger.debug('Summary generation completed successfully.');
+
+      return { result: result.output_text };
+    }
+
+    const chain = oneShotPrompt.pipe(model);
 
     this.logger.debug('Generating summary...');
-    const result = await chain.invoke({ input_documents: docs });
+
+    const result = await chain.invoke({ text: docs[0].pageContent });
 
     this.logger.debug('Summary generation completed successfully.');
-    return { result: result.output_text };
+
+    return { result: result.content.toString() };
   }
 
   private initializeAnthropicModel(): ChatAnthropic {
     return new ChatAnthropic({
-      temperature: 0.3,
+      temperature: 0.6,
       modelName: 'claude-3-5-sonnet-20240620',
       maxTokens: 4000, // TODO: iterate on this
       anthropicApiKey: process.env.ANTHROPIC_API_KEY,
-    });
-  }
-
-  private createSummarizationChain(model: ChatAnthropic) {
-    const refinePrompt = createRefinePrompt();
-    const questionPrompt = createQuestionPrompt();
-
-    return loadSummarizationChain(model, {
-      type: 'refine',
-      questionPrompt,
-      refinePrompt,
     });
   }
 

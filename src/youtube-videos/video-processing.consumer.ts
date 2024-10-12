@@ -296,7 +296,7 @@ export class VideoProcessingConsumer {
 
     // Create an array of promises for each chunk transcription
     const transcriptionPromises = chunks.map((chunk, index) =>
-      this.transcribeChunk(filePath, chunk[0], chunk[1], index)
+      this.transcribeChunk(filePath, chunk[0], chunk[1], index),
     );
 
     // Wait for all transcriptions to complete
@@ -373,13 +373,13 @@ export class VideoProcessingConsumer {
       const transcriptContent = await this.storageService.readFile(
         video.transcriptUrl,
       );
-      const transcriptJson = JSON.parse(transcriptContent.toString('utf-8'));
-      const transcript = transcriptJson.text;
+      // const transcriptJson = JSON.parse(transcriptContent.toString('utf-8'));
+      // const transcript = transcriptJson.text;
 
-      const docs = await this.processTranscript(transcript);
-      const { structuredThemes } = await this.identifyThemes(docs);
+      // const docs = await this.processTranscript(transcript);
+      // const { structuredThemes } = await this.identifyThemes(docs);
 
-      video.discussionTopics = structuredThemes;
+      video.discussionTopics = {};
       video.processingStatus = VideoProcessingStatus.TOPICS_FETCHED;
       await this.youtubeVideoRepository.save(video);
 
@@ -394,8 +394,8 @@ export class VideoProcessingConsumer {
     this.logger.debug('Starting transcript processing...');
 
     const textSplitter = new RecursiveCharacterTextSplitter({
-      chunkSize: 10000,
-      chunkOverlap: 200,
+      chunkSize: 100000,
+      chunkOverlap: 20000,
     });
 
     const docs = await textSplitter.splitDocuments([
