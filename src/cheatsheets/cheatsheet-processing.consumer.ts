@@ -52,6 +52,7 @@ export class CheatsheetProcessingConsumer {
         cheatsheet.language,
         cheatsheet.neededTopics,
         contentStructure,
+        video.persona,
       );
 
       cheatsheet.content = { text: result };
@@ -130,15 +131,16 @@ export class CheatsheetProcessingConsumer {
     language: string,
     focusedThemes: string[],
     contentStructure: string,
+    persona: string,
   ): Promise<{ result: string }> {
     this.logger.debug('Starting summary generation...');
 
     const model = this.initializeAnthropicModel();
 
     const options: SummaryGeneratorOptions = {
-      refinePrompt: createRefinePrompt(contentStructure),
-      questionPrompt: createQuestionPrompt(contentStructure),
-      oneShotPrompt: createOneShotPrompt(contentStructure),
+      refinePrompt: createRefinePrompt(contentStructure, persona),
+      questionPrompt: createQuestionPrompt(contentStructure, persona),
+      oneShotPrompt: createOneShotPrompt(contentStructure, persona),
       model,
     };
 

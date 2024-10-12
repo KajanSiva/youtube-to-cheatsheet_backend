@@ -11,11 +11,7 @@ const guidelines = `
 
 `;
 
-const persona = `
-This summary is for a busy product manager. Who wants to learn and understand the content of the podcast in depth.
-`;
-
-export const createQuestionPrompt = (contentStructure) => {
+export const createQuestionPrompt = (contentStructure, persona) => {
   return PromptTemplate.fromTemplate(`
 # Instructions:
 
@@ -36,7 +32,7 @@ ${guidelines}
 `);
 };
 
-export const createRefinePrompt = (contentStructure) => {
+export const createRefinePrompt = (contentStructure, persona) => {
   return PromptTemplate.fromTemplate(`
 # Instructions:
 
@@ -67,7 +63,7 @@ ${guidelines}
 `);
 };
 
-export const createOneShotPrompt = (contentStructure) => {
+export const createOneShotPrompt = (contentStructure, persona) => {
   return PromptTemplate.fromTemplate(`
 # Instructions:
 
