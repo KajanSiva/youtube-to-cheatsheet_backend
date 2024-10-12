@@ -2,6 +2,8 @@
 
 This project is a NestJS-based backend application that generates custom cheatsheets from YouTube videos. It uses TypeORM to connect to a PostgreSQL database and Redis for Bull event queue processing.
 
+[![Preview of the app](https://img.youtube.com/vi/S3faLLZhIo4/0.jpg)](https://www.youtube.com/watch?v=S3faLLZhIo4)
+
 ## Project Purpose
 
 The main purpose of this application is to:
