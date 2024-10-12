@@ -73,3 +73,9 @@ The application will be available at `http://localhost:3000`.
 - `POST /cheatsheets`: Create a new cheatsheet for a processed video
 - `GET /cheatsheets`: Get a list of all cheatsheets
 - `GET /cheatsheets/:id`: Get a specific cheatsheet
+
+
+## Frontend repository
+
+This backend application interacts with a frontend application:
+https://github.com/KajanSiva/youtube-to-cheatsheet_frontend
