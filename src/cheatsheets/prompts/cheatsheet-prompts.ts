@@ -96,7 +96,8 @@ export const createMainThemeQuestionPrompt = () => {
   return PromptTemplate.fromTemplate(`
 # Instructions:
 
-You are a helpful assistant tasked with identifying the main theme of a video based on the first chunk of its transcript. Focus solely on the content within this transcript chunk. Your goal is to analyze the content and summarize the primary topic or subject matter in one or two sentences, capturing the essence of the discussion.
+You are a helpful assistant tasked with identifying the main theme of a video based on the first chunk of its transcript. Your goal is to analyze the content and determine the main theme of the video, without going too much into detail about the specific content of the video.
+Ensure the result is formatted in Markdown.
 
 # Transcript Chunk:
 {text}
@@ -116,6 +117,8 @@ You are a helpful assistant tasked with refining and expanding the identificatio
 * Enhance Accuracy: Provide additional context if necessary to better capture the video's main subject matter.
 * Focus on Relevance: Prioritize information that best represents the overall theme of the video.
 
+Ensure the result is formatted in Markdown.
+
 # Existing Theme Summary:
 {existing_answer}
 
@@ -131,7 +134,8 @@ export const createMainThemeOneShotPrompt = () => {
   return PromptTemplate.fromTemplate(`
 # Instructions:
 
-You are a helpful assistant tasked with identifying the main theme of a video based on its full transcript. Please focus solely on the content within this transcript. Your goal is to analyze the content and summarize the primary topic or subject matter in one or two sentences.
+You are a helpful assistant tasked with identifying the main theme of a video based on its full transcript. Your goal is to analyze the content and determine the main theme of the video, without going too much into detail about the specific content of the video.
+Ensure the result is formatted in Markdown.
 
 # Transcript:
 {text}
@@ -146,6 +150,7 @@ export const createTargetPersonaQuestionPrompt = () => {
 # Instructions:
 
 You are a helpful assistant tasked with identifying the target persona for a video based on the first chunk of its transcript. Your goal is to determine the type of audience that would most benefit from the content and describe this persona in detail.
+Ensure the result is formatted in Markdown with appropriate headings and subheadings.
 
 # Persona Description Format:
 - Professional role and industry
@@ -171,6 +176,8 @@ You are a helpful assistant tasked with refining and expanding the identificatio
 * Enhance Accuracy: Provide additional context if necessary to better capture the intended audience.
 * Focus on Relevance: Prioritize information that best represents the target persona for the video content.
 
+Ensure the result is formatted in Markdown with appropriate headings and subheadings.
+
 # Persona Description Format:
 - Professional role and industry
 - Experience level
@@ -193,6 +200,7 @@ export const createTargetPersonaOneShotPrompt = () => {
 # Instructions:
 
 You are a helpful assistant tasked with identifying the target persona for a video based on its full transcript. Your goal is to determine the type of audience that would most benefit from the content and describe this persona in detail.
+Ensure the result is formatted in Markdown with appropriate headings and subheadings.
 
 # Persona Description Format:
 - Professional role and industry
