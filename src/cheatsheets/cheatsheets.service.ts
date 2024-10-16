@@ -61,7 +61,8 @@ export class CheatsheetsService {
   async getCheatsheets(videoId?: string): Promise<Cheatsheet[]> {
     const queryBuilder = this.cheatsheetRepository
       .createQueryBuilder('cheatsheet')
-      .leftJoinAndSelect('cheatsheet.video', 'video');
+      .leftJoinAndSelect('cheatsheet.video', 'video')
+      .orderBy('cheatsheet.createdAt', 'DESC');
 
     if (videoId) {
       queryBuilder.where('video.id = :videoId', { videoId });
