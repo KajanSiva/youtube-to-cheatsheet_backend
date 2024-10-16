@@ -96,14 +96,13 @@ export const createMainThemeQuestionPrompt = () => {
   return PromptTemplate.fromTemplate(`
 # Instructions:
 
-You are a helpful assistant tasked with identifying the main theme of a video based on the first chunk of its transcript. Your goal is to analyze the content and determine the main theme of the video, without going too much into detail about the specific content of the video.
-Ensure the result is formatted in Markdown.
+Determine the main theme of the video based on the first chunk of its transcript. Your goal is to analyze the content and determine the main theme of the video, without going too much into detail about the specific content of the video.
+The final result should be few words that categorize the main theme of the video.
 
 # Transcript Chunk:
 {text}
 
 Main Theme:
-[Provide a concise summary of the main theme based on this chunk]
 `);
 };
 
@@ -111,13 +110,8 @@ export const createMainThemeRefinePrompt = () => {
   return PromptTemplate.fromTemplate(`
 # Instructions:
 
-You are a helpful assistant tasked with refining and expanding the identification of a video's main theme. Using the existing theme summary and new information from an additional chunk of the video transcript, create an updated and comprehensive main theme description. Your goals are to:
-* Integrate New Information: Incorporate relevant details from the new transcript chunk into the existing theme summary.
-* Maintain Coherence: Ensure the updated theme description is clear and concise.
-* Enhance Accuracy: Provide additional context if necessary to better capture the video's main subject matter.
-* Focus on Relevance: Prioritize information that best represents the overall theme of the video.
-
-Ensure the result is formatted in Markdown.
+Determine the main theme of the video based on it's transcript. Using the existing theme summary and new information from an additional chunk of the video transcript, create an updated and comprehensive main theme description. Your goals are to:
+The final result should be few words that categorize the main theme of the video.
 
 # Existing Theme Summary:
 {existing_answer}
@@ -126,7 +120,6 @@ Ensure the result is formatted in Markdown.
 {text}
 
 # Updated Main Theme:
-[Provide the refined main theme description here, incorporating insights from both the existing summary and the new chunk.]
 `);
 };
 
@@ -134,14 +127,13 @@ export const createMainThemeOneShotPrompt = () => {
   return PromptTemplate.fromTemplate(`
 # Instructions:
 
-You are a helpful assistant tasked with identifying the main theme of a video based on its full transcript. Your goal is to analyze the content and determine the main theme of the video, without going too much into detail about the specific content of the video.
-Ensure the result is formatted in Markdown.
+Determine the main theme of the video based on its full transcript. Your goal is to analyze the content and determine the main theme of the video, without going too much into detail about the specific content of the video.
+The final result should be few words that categorize the main theme of the video.
 
 # Transcript:
 {text}
 
 Main Theme:
-[Provide a concise summary of the main theme based on the full transcript]
 `);
 };
 
